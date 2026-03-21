@@ -123,13 +123,12 @@ img {
 .hero-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16px;
   margin-bottom: 24px;
 }
 
 .brand-lockup,
-.privacy-link,
 .micro-chip,
 .cta-note {
   display: inline-flex;
@@ -141,6 +140,16 @@ img {
   background: rgba(255, 255, 255, 0.07);
   backdrop-filter: blur(18px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+}
+
+.sticky-link-wrap {
+  position: sticky;
+  top: 24px;
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+  pointer-events: none;
 }
 
 .brand-lockup {
@@ -174,11 +183,16 @@ img {
 }
 
 .privacy-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(23, 23, 23, 0.72);
   color: rgba(255, 255, 255, 0.84);
-  position: fixed;
-  top: 24px;
-  right: clamp(16px, 4vw, 48px);
-  z-index: 40;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+  pointer-events: auto;
   transition: transform 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
@@ -677,9 +691,12 @@ img {
     justify-content: center;
   }
 
+  .sticky-link-wrap {
+    top: 16px;
+  }
+
   .privacy-link {
-    left: 16px;
-    right: 16px;
+    width: 100%;
     justify-content: center;
   }
 

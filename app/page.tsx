@@ -48,6 +48,12 @@ export default function HomePage() {
       <div className="mesh-orb three" />
 
       <div className="content-wrap">
+        <div className="sticky-link-wrap reveal delay-1">
+          <Link href="/privacy" className="privacy-link">
+            Privacy Policy
+          </Link>
+        </div>
+
         <div className="hero-top">
           <div className="brand-lockup reveal">
             <div className="brand-icon">
@@ -64,10 +70,6 @@ export default function HomePage() {
               <span>iOS-first faith companion</span>
             </div>
           </div>
-
-          <Link href="/privacy" className="privacy-link reveal delay-1">
-            Privacy Policy
-          </Link>
         </div>
 
         <section className="glass-card hero-card reveal delay-1">
