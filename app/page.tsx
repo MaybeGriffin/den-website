@@ -115,7 +115,7 @@ export default function HomePage() {
           <div className="story-bridge-grid">
             <div className="bridge-step">
               <strong>Begin softly</strong>
-              <span>A clear place to meet ead day in the Lords word.</span>
+              <span>A clear place to meet each day in the Lords word.</span>
             </div>
             <div className="bridge-step">
               <strong>Keep what mattered</strong>

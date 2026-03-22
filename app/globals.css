@@ -645,11 +645,12 @@ img {
 
   .sticky-link-wrap {
     top: 16px;
+    justify-content: flex-start;
   }
 
   .privacy-link {
-    width: 100%;
-    justify-content: center;
+    width: auto;
+    justify-content: flex-start;
   }
 
   .hero-title {
@@ -665,5 +666,9 @@ img {
 
   .visual-stage {
     min-height: auto;
+  }
+
+  .visual-stage-fill {
+    min-height: clamp(260px, 70vw, 360px);
   }
 }
