@@ -7,35 +7,35 @@ const featureMoments = [
   {
     eyebrow: "Make Bible study fun",
     title: "Open scripture without forcing the moment.",
-    body: "Den makes the habit feel bright, gentle, and easy to return to every day.",
+    body: "Den makes the the Bible feel clear, gentle, and easy to return to every day.",
     image: "/Landing2.png",
     imageAlt: "Den mascot holding a Bible.",
-    chips: ["Daily verses", "Short reflection", "Easy to begin"],
+    chips: ["Daily verses", "Make friends", "Easy to start"],
   },
   {
     eyebrow: "Remember what stayed with you",
-    title: "Notes, progress, and highlights that keep your place warm.",
-    body: "Save what mattered, see your growth, and come back to the verses that met you there.",
+    title: "Notes, progress, and highlights that keeps everything saved.",
+    body: "Save what matters, see your growth, and come back to the verses that met you there.",
     image: "/Landing1.png",
     imageAlt: "Den mascot writing in a notebook.",
-    chips: ["Highlights", "Saved notes", "Gentle progress"],
+    chips: ["Highlights", "Notes", "Progress"],
     reverse: true,
   },
   {
-    eyebrow: "Stay steady together",
-    title: "Friend-based accountability without pressure or noise.",
-    body: "Keep streaks alive with people who want the same quiet consistency you do.",
+    eyebrow: "Grow together",
+    title: "A new way to explore the Bible with friends everyday.",
+    body: "Keep streaks alive with your new and old friends.",
     image: "/Landing3.png",
     imageAlt: "Den mascot holding a blue flame.",
-    chips: ["Start streaks", "Small encouragement", "Faithful rhythm"],
+    chips: ["Start streaks", "Grow together", "Deeper understandings"],
   },
   {
-    eyebrow: "Explore and reflect",
-    title: "Curated verses and guided discovery that lead you closer to the Lord.",
+    eyebrow: "Explore and learn",
+    title: "Curated verses and guided discovery that leads you closer to the Lord.",
     body: "When you want to go deeper, Den opens a more thoughtful path through scripture and reflection.",
     image: "/Landing4.png",
     imageAlt: "Den mascot sitting with Jesus.",
-    chips: ["Explore mode", "Guided reflection", "AI companionship"],
+    chips: ["Explore mode", "Guided reflection", "Companionship"],
     reverse: true,
   },
 ];
@@ -54,38 +54,18 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="hero-top">
-          <div className="brand-lockup reveal">
-            <div className="brand-icon">
-              <Image
-                src="/Icon.png"
-                alt="Den app icon."
-                width={48}
-                height={48}
-                priority
-              />
-            </div>
-            <div className="brand-text">
-              <strong>Den</strong>
-              <span>iOS-first faith companion</span>
-            </div>
-          </div>
-        </div>
-
         <section className="glass-card hero-card reveal delay-1">
           <div className="hero-grid">
             <div className="hero-copy">
-              <span className="eyebrow">Daily faith rhythm</span>
+              <span className="eyebrow">Everything in one place</span>
               <h1 className="hero-title">
-                Scripture.
+                Grow
                 <br />
-                Stillness.
-                <br />
-                <span className="accent">Steady</span> return.
+                <span>Every</span> Day
               </h1>
               <p>
-                Den is a private sanctuary for daily scripture, guided reflection,
-                and faithful consistency with friends.
+                Den is the home for daily scripture, guided learning,
+                and growing with friends.
               </p>
 
               <div className="hero-rhythm">
@@ -124,10 +104,10 @@ export default function HomePage() {
 
         <section className="glass-card story-bridge reveal delay-2">
           <div className="story-bridge-copy">
-            <span className="eyebrow">One gentle arc</span>
-            <h2>From invitation to habit to hope.</h2>
+            <span className="eyebrow">Daily faith</span>
+            <h2>From invitation to new friends to hope.</h2>
             <p>
-              Den moves with a calm, human rhythm so scripture becomes easier to
+              Den moves with a rhythm so scripture becomes easier to
               begin, easier to remember, and easier to keep with others.
             </p>
           </div>
@@ -135,15 +115,15 @@ export default function HomePage() {
           <div className="story-bridge-grid">
             <div className="bridge-step">
               <strong>Begin softly</strong>
-              <span>A clear place to meet the day in the Word.</span>
+              <span>A clear place to meet ead day in the Lords word.</span>
             </div>
             <div className="bridge-step">
               <strong>Keep what mattered</strong>
               <span>Notes and highlights that help yesterday stay present.</span>
             </div>
             <div className="bridge-step">
-              <strong>Stay with it</strong>
-              <span>Friends and guided reflection that turn intent into rhythm.</span>
+              <strong>Grow with others</strong>
+              <span>Friends and communities that turn intent into progress.</span>
             </div>
           </div>
         </section>
@@ -185,8 +165,8 @@ export default function HomePage() {
 
         <section className="glass-card cta-card reveal delay-4">
           <div className="cta-copy">
-            <span className="eyebrow">Commit to the rhythm</span>
-            <h2>Bring the next quiet moment back to Den.</h2>
+            <span className="eyebrow">Commit to the Lord</span>
+            <h2>Bring the next moment back to Den.</h2>
             <p>
               Scripture, reflection, and accountability in one composed iOS
               companion built for daily return.
