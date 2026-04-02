@@ -312,7 +312,8 @@ button {
   margin-bottom: 0.5rem;
   overflow: hidden;
   border-radius: 1.5rem;
-  background: rgba(29, 29, 29, 0.73);
+  background: rgba(29, 29, 29, 0.5);
+  opacity: 0.73;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -733,6 +734,7 @@ button {
   .den-feature-card {
     width: 72vw;
     min-width: 26rem;
+    opacity: 0.73;
   }
 }
 
