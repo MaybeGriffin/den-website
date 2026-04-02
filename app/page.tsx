@@ -6,6 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { APPLE_STANDARD_EULA_URL } from "@/lib/legal";
 
 const APP_STORE_URL = "https://apps.apple.com/";
+const DESKTOP_WAVE_AMPLITUDE = 50;
+const DESKTOP_WAVE_REFERENCE_WIDTH = 1440;
+const MIN_WAVE_AMPLITUDE = 18;
 
 const featureRows = [
   [
@@ -60,12 +63,50 @@ function DownloadButton() {
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mascotWidth, setMascotWidth] = useState<number>();
+  const [waveAmplitude, setWaveAmplitude] = useState(DESKTOP_WAVE_AMPLITUDE);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    function syncWaveAmplitude() {
+      const nextAmplitude = Math.max(
+        MIN_WAVE_AMPLITUDE,
+        Math.min(
+          DESKTOP_WAVE_AMPLITUDE,
+          (window.innerWidth / DESKTOP_WAVE_REFERENCE_WIDTH) * DESKTOP_WAVE_AMPLITUDE,
+        ),
+      );
+
+      setWaveAmplitude(nextAmplitude);
+    }
+
+    syncWaveAmplitude();
+    window.addEventListener("resize", syncWaveAmplitude);
+
+    return () => {
+      window.removeEventListener("resize", syncWaveAmplitude);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      setMenuOpen(false);
+
+      if (event.persisted && window.matchMedia("(max-width: 720px)").matches) {
+        window.location.reload();
+      }
+    }
+
+    window.addEventListener("pageshow", handlePageShow);
+
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+    };
   }, []);
 
   useEffect(() => {
@@ -119,6 +160,11 @@ export default function HomePage() {
     };
   }, [menuOpen]);
 
+  function handlePrivacyNavigation() {
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+
   return (
     <main className="den-landing">
       <div aria-hidden="true" className="den-wavy-container">
@@ -137,12 +183,12 @@ export default function HomePage() {
               <g key={y}>
                 <path
                   className="den-wavy-path"
-                  d={`M0 ${y} Q 250 ${y - 50}, 500 ${y} T 1000 ${y}`}
+                  d={`M0 ${y} Q 250 ${y - waveAmplitude}, 500 ${y} T 1000 ${y}`}
                 />
                 {glow ? (
                   <path
                     className="den-glow-line"
-                    d={`M0 ${y} Q 250 ${y - 50}, 500 ${y} T 1000 ${y}`}
+                    d={`M0 ${y} Q 250 ${y - waveAmplitude}, 500 ${y} T 1000 ${y}`}
                     style={{
                       animationDelay: `${-(index % 13) - (index / 3)}s`,
                     }}
@@ -172,13 +218,13 @@ export default function HomePage() {
           ref={menuRef}
           className={`den-mobile-menu${menuOpen ? " open" : ""}`}
         >
-          <Link href="/privacy" onClick={() => setMenuOpen(false)}>
+          <Link href="/privacy" onClick={handlePrivacyNavigation} scroll>
             Privacy Policy
           </Link>
           <a
             href={APPLE_STANDARD_EULA_URL}
             onClick={() => setMenuOpen(false)}
-            rel="noreferrer"
+            rel="noopener noreferrer"
             target="_blank"
           >
             Terms of Service
@@ -193,13 +239,15 @@ export default function HomePage() {
             <span className="den-brand-light">Den</span>{" "}
             <span className="den-brand-dark">App</span>
             <span className="den-title-break" />
-            <span className="den-brand-dark">Bible, Social, More.</span>
+            <span className="den-brand-dark den-title-nowrap">Bible, Social, More.</span>
           </h1>
 
           <p className="den-hero-copy">
-            Grow your relationship with the Lord and your friends
-            <br />
-            Den is here to help you on your journey
+            <span className="den-hero-copy-line">
+              Grow your relationship with the Lord{" "}
+              <span className="den-hero-copy-nowrap">and your friends</span>
+            </span>
+            <span className="den-hero-copy-line">Den is here to help you on your journey</span>
           </p>
 
           <div className="den-hero-action">
@@ -252,8 +300,10 @@ export default function HomePage() {
           <div className="den-footer-copy">© 2024 DEN. ALL RIGHTS RESERVED.</div>
 
           <div className="den-footer-links">
-            <Link href="/privacy">Privacy Policy</Link>
-            <a href={APPLE_STANDARD_EULA_URL} rel="noreferrer" target="_blank">
+            <Link href="/privacy" onClick={handlePrivacyNavigation} scroll>
+              Privacy Policy
+            </Link>
+            <a href={APPLE_STANDARD_EULA_URL} rel="noopener noreferrer" target="_blank">
               Terms of Service
             </a>
           </div>

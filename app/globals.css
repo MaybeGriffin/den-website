@@ -206,6 +206,11 @@ button {
   margin-top: 1.5rem;
 }
 
+.den-title-nowrap {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 .den-brand-dark {
   color: var(--accent-dark);
 }
@@ -221,6 +226,14 @@ button {
   font-weight: 300;
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.78);
+}
+
+.den-hero-copy-line {
+  display: block;
+}
+
+.den-hero-copy-nowrap {
+  white-space: nowrap;
 }
 
 .den-hero-action {
@@ -735,15 +748,15 @@ button {
   }
 
   .den-hero-title {
-    font-size: clamp(2.9rem, 14vw, 4.9rem);
+    font-size: clamp(2.45rem, 12vw, 4.6rem);
   }
 
   .den-title-break {
-    margin-top: 1rem;
+    margin-top: 1.3rem;
   }
 
-  .den-hero-copy br {
-    display: none;
+  .den-hero-copy {
+    max-width: 23rem;
   }
 
   .den-download-button {
@@ -769,6 +782,10 @@ button {
 
   .den-cta-section {
     padding-inline: 1rem;
+  }
+
+  .den-cta-divider {
+    display: none;
   }
 
   .den-footer {
@@ -1097,6 +1114,10 @@ button {
     padding-top: 2rem;
   }
 
+  .privacy-title-row {
+    align-items: center;
+  }
+
   .privacy-inner {
     padding: 8.3rem 1rem 2.5rem;
   }
@@ -1109,7 +1130,7 @@ button {
   .privacy-back {
     width: 1.75rem;
     height: 2.65rem;
-    margin-top: 0.28rem;
+    margin-top: 0;
   }
 
   .privacy-back-icon {

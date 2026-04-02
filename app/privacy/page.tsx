@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fragment } from "react";
 import { loadPrivacyPolicy } from "@/lib/privacy-policy";
 import PrivacyBackButton from "./privacy-back-button";
+import PrivacyPageClient from "./privacy-page-client";
 
 const CONTACT_EMAIL = "griffinbritt@denbible.com";
 const THIRD_PARTY_SERVICES = [
@@ -62,6 +63,7 @@ export default function PrivacyPage() {
 
   return (
     <main className="privacy-shell">
+      <PrivacyPageClient />
       <div aria-hidden="true" className="privacy-blur privacy-blur-top" />
       <div aria-hidden="true" className="privacy-blur privacy-blur-bottom" />
 
