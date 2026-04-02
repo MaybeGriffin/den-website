@@ -312,7 +312,7 @@ button {
   margin-bottom: 0.5rem;
   overflow: hidden;
   border-radius: 1.5rem;
-  background: rgba(29, 29, 29, 0.5);
+  background: rgba(29, 29, 29, 0.77);
   opacity: 0.77;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
