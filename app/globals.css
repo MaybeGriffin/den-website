@@ -754,7 +754,7 @@ button {
   }
 
   .den-hero::before {
-    display: none;
+    opacity: 0.5;
   }
 
   .den-hero-title {
