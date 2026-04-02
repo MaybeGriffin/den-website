@@ -9,6 +9,8 @@ const APP_STORE_URL = "https://apps.apple.com/";
 const DESKTOP_WAVE_AMPLITUDE = 50;
 const DESKTOP_WAVE_REFERENCE_WIDTH = 1440;
 const MIN_WAVE_AMPLITUDE = 18;
+const MOBILE_BREAKPOINT_QUERY = "(max-width: 720px)";
+const EXTERNAL_NAV_RETURN_KEY = "den:return-from-external";
 
 const featureRows = [
   [
@@ -94,18 +96,37 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    function handlePageShow(event: PageTransitionEvent) {
-      setMenuOpen(false);
+    function restoreFromExternalNavigation() {
+      if (
+        !window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches ||
+        window.sessionStorage.getItem(EXTERNAL_NAV_RETURN_KEY) !== "1"
+      ) {
+        return;
+      }
 
-      if (event.persisted && window.matchMedia("(max-width: 720px)").matches) {
-        window.location.reload();
+      window.sessionStorage.removeItem(EXTERNAL_NAV_RETURN_KEY);
+      window.location.reload();
+    }
+
+    function handlePageShow() {
+      setMenuOpen(false);
+      restoreFromExternalNavigation();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        restoreFromExternalNavigation();
       }
     }
 
     window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("focus", restoreFromExternalNavigation);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("focus", restoreFromExternalNavigation);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -163,6 +184,14 @@ export default function HomePage() {
   function handlePrivacyNavigation() {
     setMenuOpen(false);
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+
+  function handleTermsNavigation() {
+    setMenuOpen(false);
+
+    if (window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches) {
+      window.sessionStorage.setItem(EXTERNAL_NAV_RETURN_KEY, "1");
+    }
   }
 
   return (
@@ -223,7 +252,7 @@ export default function HomePage() {
           </Link>
           <a
             href={APPLE_STANDARD_EULA_URL}
-            onClick={() => setMenuOpen(false)}
+            onClick={handleTermsNavigation}
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -239,7 +268,9 @@ export default function HomePage() {
             <span className="den-brand-light">Den</span>{" "}
             <span className="den-brand-dark">App</span>
             <span className="den-title-break" />
-            <span className="den-brand-dark den-title-nowrap">Bible, Social, More.</span>
+            <span className="den-brand-dark den-title-nowrap den-title-secondary">
+              Bible, Social, More.
+            </span>
           </h1>
 
           <p className="den-hero-copy">
@@ -303,7 +334,12 @@ export default function HomePage() {
             <Link href="/privacy" onClick={handlePrivacyNavigation} scroll>
               Privacy Policy
             </Link>
-            <a href={APPLE_STANDARD_EULA_URL} rel="noopener noreferrer" target="_blank">
+            <a
+              href={APPLE_STANDARD_EULA_URL}
+              onClick={handleTermsNavigation}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
               Terms of Service
             </a>
           </div>
