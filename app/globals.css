@@ -312,13 +312,13 @@ button {
   margin-bottom: 0.5rem;
   overflow: hidden;
   border-radius: 1.5rem;
-  background: rgba(29, 29, 29, 0.5);
+  background: rgba(29, 29, 29, 0.73);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
 
 .den-feature-card:nth-child(even) {
-  background: rgba(32, 32, 32, 0.5);
+  background: rgba(32, 32, 32, 0.73);
 }
 
 .den-feature-card::after {
@@ -733,7 +733,6 @@ button {
   .den-feature-card {
     width: 72vw;
     min-width: 26rem;
-    opacity: 0.5;
   }
 }
 
