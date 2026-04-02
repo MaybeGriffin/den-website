@@ -18,7 +18,7 @@ const SECTION_TITLES = new Set([
   "Data Security",
   "Your Rights and Choices",
   "Account Deletion and Data Deletion",
-  "Children’s Privacy",
+  "Children's Privacy",
   "International Data Transfers",
   "Changes to This Privacy Policy",
   "Contact Information",
@@ -48,6 +48,9 @@ export function loadPrivacyPolicy(): PrivacyPolicy {
   const raw = readFileSync(filePath, "utf8")
     .replace(/\r\n/g, "\n")
     .replace(/\u00a0/g, " ")
+    .replace(/â€™/g, "'")
+    .replace(/â€œ|â€\x9d/g, '"')
+    .replace(/Â/g, "")
     .trim();
 
   const lines = raw.split("\n");

@@ -54,7 +54,7 @@ We share information only as needed to operate Den and provide its features.
 
 We may share information with service providers that help us run the app, with other Den users where sharing is part of the product experience, when you choose to use Apple or carrier features such as SMS sharing or in-app purchases, and if required by law or needed to protect rights, safety, or the integrity of Den.
 
-If you use Den’s social features, people you connect with may see information such as your username, avatar, streak participation, verse responses, and chat messages.
+If you use Den's social features, people you connect with may see information such as your username, avatar, streak participation, verse responses, and chat messages.
 
 Your profile photo is currently stored in a way that allows it to be accessed through a public URL so it can be displayed in the app. Please only upload a photo you are comfortable sharing.
 
@@ -82,15 +82,15 @@ Payments and Subscriptions
 
 Den offers subscription-gated features.
 
-On iOS, paywalls are presented through Superwall, subscription and entitlement handling is managed through RevenueCat, and payment processing is handled through Apple’s App Store. Den processes subscription-related information such as entitlement status, expiration state, restore results, and related billing event metadata needed to keep your access in sync.
+On iOS, paywalls are presented through Superwall, subscription and entitlement handling is managed through RevenueCat, and payment processing is handled through Apple's App Store. Den processes subscription-related information such as entitlement status, expiration state, restore results, and related billing event metadata needed to keep your access in sync.
 
-Den does not receive your full credit card number from Apple’s in-app purchase flow.
+Den does not receive your full credit card number from Apple's in-app purchase flow.
 
 Data Retention
 
 We keep information for as long as reasonably necessary to provide Den, maintain your account, operate features you use, protect the app, and comply with legal obligations.
 
-Based on the current implementation, AI Chat history is retained for about 14 days, Bible proxy audit records are retained for about 30 days, friend-search audit records are retained for about 90 days, and some live Explore and social presence data is shorter-lived and cleaned up automatically. Certain read social message history may also be purged as part of the app’s rolling social retention rules.
+Based on the current implementation, AI Chat history is retained for about 14 days, Bible proxy audit records are retained for about 30 days, friend-search audit records are retained for about 90 days, and some live Explore and social presence data is shorter-lived and cleaned up automatically. Certain read social message history may also be purged as part of the app's rolling social retention rules.
 
 We may retain limited records for longer where needed for security, fraud prevention, billing reconciliation, legal compliance, dispute resolution, or enforcement of our terms.
 
@@ -106,7 +106,7 @@ Depending on where you live, you may have rights to access the personal informat
 
 You can also update your profile information inside the app, change notification settings in the app, manage iPhone permissions in system settings, and delete your account from the app.
 
-To make a privacy request, email [brittjamesg@gmail.com](mailto:brittjamesg@gmail.com).
+To make a privacy request, email [griffinbritt@denbible.com](mailto:griffinbritt@denbible.com).
 
 Account Deletion and Data Deletion
 
@@ -114,9 +114,9 @@ Den includes an in-app account deletion flow.
 
 If you delete your account, we will delete your authentication account and associated profile photo files, and we will generally delete or de-identify related account data tied to that account, subject to limited retention where needed for legal, security, billing, fraud-prevention, or operational reasons.
 
-Children’s Privacy
+Children's Privacy
 
-Den is not intended for children under 13, and we do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided personal information through Den, please contact [brittjamesg@gmail.com](mailto:brittjamesg@gmail.com) so we can review and delete it if appropriate.
+Den is not intended for children under 13, and we do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided personal information through Den, please contact [griffinbritt@denbible.com](mailto:griffinbritt@denbible.com) so we can review and delete it if appropriate.
 
 International Data Transfers
 
@@ -130,5 +130,5 @@ Contact Information
 
 If you have questions about this Privacy Policy or want to make a privacy request, contact:
 
-James Griffin Britt  
-Email: [brittjamesg@gmail.com](mailto:brittjamesg@gmail.com)
+James Griffin Britt
+Email: [griffinbritt@denbible.com](mailto:griffinbritt@denbible.com)
