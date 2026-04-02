@@ -62,7 +62,7 @@ export default function PrivacyPage() {
   );
 
   return (
-    <main className="privacy-shell">
+    <main className="privacy-shell" id="top">
       <PrivacyPageClient />
       <div aria-hidden="true" className="privacy-blur privacy-blur-top" />
       <div aria-hidden="true" className="privacy-blur privacy-blur-bottom" />

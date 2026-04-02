@@ -203,7 +203,7 @@ button {
 
 .den-title-break {
   display: block;
-  margin-top: 1.5rem;
+  margin-top: 0.85rem;
 }
 
 .den-title-nowrap {
@@ -337,6 +337,7 @@ button {
   font-size: clamp(2rem, 4.2vw, 2.9rem);
   font-weight: 800;
   letter-spacing: -0.03em;
+  line-height: 1.02;
 }
 
 .den-feature-card p {
@@ -757,7 +758,7 @@ button {
   }
 
   .den-title-break {
-    margin-top: 1.3rem;
+    margin-top: 0.65rem;
   }
 
   .den-title-secondary {
@@ -787,6 +788,10 @@ button {
 
   .den-feature-card p {
     font-size: 1.15rem;
+  }
+
+  .den-feature-card h2 {
+    line-height: 0.98;
   }
 
   .den-cta-section {

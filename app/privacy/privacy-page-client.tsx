@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 function scrollToTop() {
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -9,19 +9,28 @@ function scrollToTop() {
 }
 
 export default function PrivacyPageClient() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previousScrollRestoration =
       "scrollRestoration" in window.history ? window.history.scrollRestoration : null;
+    const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+
+    function enforceTopScroll() {
+      scrollToTop();
+      window.requestAnimationFrame(scrollToTop);
+    }
 
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
 
-    scrollToTop();
-    window.addEventListener("pageshow", scrollToTop);
+    document.documentElement.style.scrollBehavior = "auto";
+
+    enforceTopScroll();
+    window.addEventListener("pageshow", enforceTopScroll);
 
     return () => {
-      window.removeEventListener("pageshow", scrollToTop);
+      window.removeEventListener("pageshow", enforceTopScroll);
+      document.documentElement.style.scrollBehavior = previousScrollBehavior;
 
       if (previousScrollRestoration !== null) {
         window.history.scrollRestoration = previousScrollRestoration;

@@ -9,8 +9,7 @@ const APP_STORE_URL = "https://apps.apple.com/";
 const DESKTOP_WAVE_AMPLITUDE = 50;
 const DESKTOP_WAVE_REFERENCE_WIDTH = 1440;
 const MIN_WAVE_AMPLITUDE = 18;
-const MOBILE_BREAKPOINT_QUERY = "(max-width: 720px)";
-const EXTERNAL_NAV_RETURN_KEY = "den:return-from-external";
+const PRIVACY_POLICY_URL = "/privacy#top";
 
 const featureRows = [
   [
@@ -96,37 +95,14 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    function restoreFromExternalNavigation() {
-      if (
-        !window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches ||
-        window.sessionStorage.getItem(EXTERNAL_NAV_RETURN_KEY) !== "1"
-      ) {
-        return;
-      }
-
-      window.sessionStorage.removeItem(EXTERNAL_NAV_RETURN_KEY);
-      window.location.reload();
-    }
-
     function handlePageShow() {
       setMenuOpen(false);
-      restoreFromExternalNavigation();
-    }
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === "visible") {
-        restoreFromExternalNavigation();
-      }
     }
 
     window.addEventListener("pageshow", handlePageShow);
-    window.addEventListener("focus", restoreFromExternalNavigation);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("pageshow", handlePageShow);
-      window.removeEventListener("focus", restoreFromExternalNavigation);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -183,15 +159,10 @@ export default function HomePage() {
 
   function handlePrivacyNavigation() {
     setMenuOpen(false);
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
 
   function handleTermsNavigation() {
     setMenuOpen(false);
-
-    if (window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches) {
-      window.sessionStorage.setItem(EXTERNAL_NAV_RETURN_KEY, "1");
-    }
   }
 
   return (
@@ -247,7 +218,7 @@ export default function HomePage() {
           ref={menuRef}
           className={`den-mobile-menu${menuOpen ? " open" : ""}`}
         >
-          <Link href="/privacy" onClick={handlePrivacyNavigation} scroll>
+          <Link href={PRIVACY_POLICY_URL} onClick={handlePrivacyNavigation} scroll>
             Privacy Policy
           </Link>
           <a
@@ -331,7 +302,7 @@ export default function HomePage() {
           <div className="den-footer-copy">© 2024 DEN. ALL RIGHTS RESERVED.</div>
 
           <div className="den-footer-links">
-            <Link href="/privacy" onClick={handlePrivacyNavigation} scroll>
+            <Link href={PRIVACY_POLICY_URL} onClick={handlePrivacyNavigation} scroll>
               Privacy Policy
             </Link>
             <a
