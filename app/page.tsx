@@ -9,6 +9,7 @@ const APP_STORE_URL = "https://apps.apple.com/";
 const DESKTOP_WAVE_AMPLITUDE = 50;
 const DESKTOP_WAVE_REFERENCE_WIDTH = 1440;
 const MIN_WAVE_AMPLITUDE = 18;
+const EXTERNAL_NAV_RETURN_KEY = "den:return-from-external";
 const PRIVACY_POLICY_URL = "/privacy#top";
 
 const featureRows = [
@@ -64,10 +65,12 @@ function DownloadButton() {
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mascotWidth, setMascotWidth] = useState<number>();
+  const [renderVersion, setRenderVersion] = useState(0);
   const [waveAmplitude, setWaveAmplitude] = useState(DESKTOP_WAVE_AMPLITUDE);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
+  const restoreFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -95,14 +98,59 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    function forceCompositeRepaint() {
+      document.body.classList.add("den-force-repaint");
+      void document.body.offsetHeight;
+
+      window.requestAnimationFrame(() => {
+        document.body.classList.remove("den-force-repaint");
+      });
+    }
+
+    function restoreFromExternalNavigation() {
+      if (window.sessionStorage.getItem(EXTERNAL_NAV_RETURN_KEY) !== "1") {
+        return;
+      }
+
+      window.sessionStorage.removeItem(EXTERNAL_NAV_RETURN_KEY);
+      setRenderVersion((current) => current + 1);
+      forceCompositeRepaint();
+    }
+
+    function scheduleRestore() {
+      if (restoreFrameRef.current !== null) {
+        window.cancelAnimationFrame(restoreFrameRef.current);
+      }
+
+      restoreFrameRef.current = window.requestAnimationFrame(() => {
+        restoreFrameRef.current = null;
+        restoreFromExternalNavigation();
+      });
+    }
+
     function handlePageShow() {
       setMenuOpen(false);
+      scheduleRestore();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        scheduleRestore();
+      }
     }
 
     window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("focus", scheduleRestore);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
+      if (restoreFrameRef.current !== null) {
+        window.cancelAnimationFrame(restoreFrameRef.current);
+      }
+
       window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("focus", scheduleRestore);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -163,10 +211,11 @@ export default function HomePage() {
 
   function handleTermsNavigation() {
     setMenuOpen(false);
+    window.sessionStorage.setItem(EXTERNAL_NAV_RETURN_KEY, "1");
   }
 
   return (
-    <main className="den-landing">
+    <main className="den-landing" key={renderVersion}>
       <div aria-hidden="true" className="den-wavy-container">
         <svg
           height="100%"
