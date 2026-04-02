@@ -733,6 +733,7 @@ button {
   .den-feature-card {
     width: 72vw;
     min-width: 26rem;
+    opacity: 0.5;
   }
 }
 
