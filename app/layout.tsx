@@ -10,25 +10,16 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://denbible.com"),
+  applicationName: "Den",
   title: {
-    default: "Den: Bible, Social, More",
+    default: "Den",
     template: "%s | Den",
   },
-  description:
-    "Den is an iOS-first faith companion for the Bible, and growing with friends.",
-  openGraph: {
-    title: "Den: Bible, Social, More",
-    description:
-      "A premium faith companion centered on the Bible, and growing with friends.",
-    url: "https://denbible.com",
-    siteName: "Den",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Den: Bible, Social, More",
-    description:
-      "A premium faith companion centered on the Bible, and growing with friends.",
+  description: "Den is a Bible app for Christian growth with daily verses, notes, and friends.",
+  icons: {
+    icon: "/Icon.png",
+    shortcut: "/Icon.png",
+    apple: "/Icon.png",
   },
 };
 
