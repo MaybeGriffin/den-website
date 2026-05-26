@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import "@fontsource/tiktok-sans/latin.css";
+import "@fontsource/charm/latin.css";
 import "./globals.css";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://denbible.com"),
@@ -17,9 +12,12 @@ export const metadata: Metadata = {
   },
   description: "Den is a Bible app for Christian growth with daily verses, notes, and friends.",
   icons: {
-    icon: "/Icon.png",
-    shortcut: "/Icon.png",
-    apple: "/Icon.png",
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/favicon-32.png",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -30,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={poppins.variable}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

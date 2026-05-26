@@ -5,7 +5,9 @@ const description =
   "Den is a Bible app for Christians who want daily verses, guided Bible study, saved notes, and honest conversations with friends in one place.";
 
 export const metadata: Metadata = {
-  title: "Bible App for Christian Friends, Notes, and Daily Verses | Den",
+  title: {
+    absolute: "Den—Christian Social app",
+  },
   description,
   alternates: {
     canonical: "/",
@@ -19,7 +21,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Bible App for Christian Friends, Notes, and Daily Verses | Den",
+    title: "Den—Christian Social app",
     description,
     url: "https://denbible.com",
     siteName: "Den",
@@ -27,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bible App for Christian Friends, Notes, and Daily Verses | Den",
+    title: "Den—Christian Social app",
     description,
   },
 };

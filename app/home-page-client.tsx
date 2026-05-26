@@ -2,371 +2,278 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { APPLE_STANDARD_EULA_URL } from "@/lib/legal";
 
 const APP_STORE_URL = "https://apps.apple.com/";
-const DESKTOP_WAVE_AMPLITUDE = 50;
-const DESKTOP_WAVE_REFERENCE_WIDTH = 1440;
-const MIN_WAVE_AMPLITUDE = 18;
-const EXTERNAL_NAV_RETURN_KEY = "den:return-from-external";
 const PRIVACY_POLICY_URL = "/privacy#top";
+const VERSE_ROW_COUNT = 16;
+const VERSES_PER_ROW = 18;
+const VERSE_GAP_PX = 21;
+const VERSE_EDGE_INSET_PX = 0;
+const VERSE_SPEED_PX_PER_SECOND = 11;
 
-const featureRows = [
-  [
-    {
-      title: "Grow with Friends",
-      body: "Add friends, build a streak with each one, and discuss a verse every day as your friendships and faith grow stronger.",
-    },
-    {
-      title: "Track Your Progress",
-      body: "Watch your understanding of the Bible grow through saved notes, highlights, and reading milestones that show how far you've come.",
-    },
-  ],
-  [
-    {
-      title: "Personalized Verses",
-      body: "Wake up to a fresh daily verse, along with different verses for every streak and guided Bible study without running into the same passages over and over.",
-    },
-    {
-      title: "Challenge Yourself",
-      body: "Grow deeper in your faith as you explore with your lion, complete guided Bible studies, and discuss verses with friends to build knowledge and confidence.",
-    },
-  ],
+const verseRowOpacities = [
+  0.12, 0.14, 0.17, 0.19, 0.17, 0.14, 0.12, 0.12,
+  0.12, 0.12, 0.14, 0.17, 0.19, 0.17, 0.14, 0.12,
 ];
 
-function AppleIcon() {
+const verseSnippets = [
+  "Philippians 4:13 I can do all things through Christ which strengtheneth me.",
+  "Luke 19:10 For the Son of man is come to seek and to save that which was lost.",
+  "Matthew 1:21 And she shall bring forth a son, and thou shalt call his name JESUS: for he shall save his people from their sins.",
+  "Isaiah 53:5 But he was wounded for our transgressions, he was bruised for our iniquities: the chastisement of our peace was upon him; and with his stripes we are healed.",
+  "Jeremiah 23:6 In his days Judah shall be saved, and Israel shall dwell safely: and this is his name whereby he shall be called, THE LORD OUR RIGHTEOUSNESS.",
+  "1 John 4:14 And we have seen and do testify that the Father sent the Son to be the Saviour of the world.",
+  "Matthew 11:28 Come unto me, all ye that labour and are heavy laden, and I will give you rest.",
+  "John 12:46 I am come a light into the world, that whosoever believeth on me should not abide in darkness.",
+  "Revelation 1:8 I am Alpha and Omega, the beginning and the ending, saith the Lord, which is, and which was, and which is to come, the Almighty.",
+  "1 Corinthians 15:57 But thanks be to God, which giveth us the victory through our Lord Jesus Christ.",
+  "Romans 5:8 But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us.",
+  "John 1:1 In the beginning was the Word, and the Word was with God, and the Word was God.",
+  "Luke 22:69 Hereafter shall the Son of man sit on the right hand of the power of God.",
+  "Philippians 2:11 And that every tongue should confess that Jesus Christ is Lord, to the glory of God the Father.",
+];
+
+function getVerseRow(rowIndex: number) {
+  return Array.from({ length: VERSES_PER_ROW }, (_, index) => {
+    const verseIndex = (rowIndex * 3 + index * 2) % verseSnippets.length;
+    return verseSnippets[verseIndex];
+  });
+}
+
+type VerseMarqueeProps = {
+  rowIndex: number;
+  verses: string[];
+};
+
+function VerseMarquee({ rowIndex, verses }: VerseMarqueeProps) {
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+
+    if (!row) {
+      return;
+    }
+
+    const rowElement = row;
+    const nodes = Array.from(rowElement.querySelectorAll<HTMLSpanElement>(".den-verse-line"));
+
+    if (nodes.length === 0) {
+      return;
+    }
+
+    let animationFrame = 0;
+    let lastTimestamp = 0;
+    let positions: number[] = [];
+    let widths: number[] = [];
+    const speed = VERSE_SPEED_PX_PER_SECOND;
+
+    function layoutVerses() {
+      const rowWidth = rowElement.clientWidth;
+      widths = nodes.map((node) => node.offsetWidth);
+      const rowOffset = (rowIndex * 197) % Math.max(rowWidth + widths[0], 1);
+      let cursor = VERSE_EDGE_INSET_PX - rowOffset;
+
+      positions = widths.map((width) => {
+        const current = cursor;
+        cursor += width + VERSE_GAP_PX;
+        return current;
+      });
+
+      nodes.forEach((node, index) => {
+        node.style.transform = `translate3d(${positions[index]}px, -50%, 0)`;
+      });
+      rowElement.classList.add("den-verse-row--ready");
+    }
+
+    function animate(timestamp: number) {
+      if (!lastTimestamp) {
+        lastTimestamp = timestamp;
+        animationFrame = requestAnimationFrame(animate);
+        return;
+      }
+
+      const deltaSeconds = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+      const rowWidth = rowElement.clientWidth;
+      const exitX = rowWidth - VERSE_EDGE_INSET_PX;
+
+      positions = positions.map((position) => position + speed * deltaSeconds);
+
+      for (let index = 0; index < positions.length; index += 1) {
+        if (positions[index] > exitX) {
+          const leftMostStart = positions.reduce((minimum, position) => Math.min(minimum, position), positions[0]);
+          positions[index] = leftMostStart - widths[index] - VERSE_GAP_PX;
+        }
+      }
+
+      nodes.forEach((node, index) => {
+        node.style.transform = `translate3d(${positions[index]}px, -50%, 0)`;
+      });
+
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    const handleResize = () => layoutVerses();
+
+    layoutVerses();
+    document.fonts?.ready.then(layoutVerses);
+    window.addEventListener("resize", handleResize);
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener("resize", handleResize);
+      rowElement.classList.remove("den-verse-row--ready");
+    };
+  }, [rowIndex]);
+
   return (
-    <svg
-      aria-hidden="true"
-      className="den-apple-icon"
-      fill="currentColor"
-      viewBox="0 0 384 512"
+    <div
+      className="den-verse-row"
+      ref={rowRef}
+      style={{
+        "--den-verse-opacity": verseRowOpacities[rowIndex % verseRowOpacities.length],
+      } as CSSProperties}
     >
-      <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-    </svg>
+      {verses.map((verse, index) => (
+        <span className="den-verse-line" key={`${rowIndex}-${index}`}>
+          {verse}
+        </span>
+      ))}
+    </div>
   );
 }
 
-function DownloadButton() {
+function LegalLink({
+  children,
+  href,
+  onClick,
+  target,
+}: {
+  children: string;
+  href: string;
+  onClick?: () => void;
+  target?: "_blank";
+}) {
+  const className = "den-legal-link";
+
+  if (target) {
+    return (
+      <a
+        aria-label={children}
+        className={className}
+        data-label={children}
+        href={href}
+        onClick={onClick}
+        rel="noopener noreferrer"
+        target={target}
+      >
+        <span>{children}</span>
+      </a>
+    );
+  }
+
   return (
-    <a
-      className="den-download-button"
-      href={APP_STORE_URL}
-      rel="noreferrer"
-      target="_blank"
+    <Link
+      aria-label={children}
+      className={className}
+      data-label={children}
+      href={href}
+      scroll
     >
-      <AppleIcon />
-      <span>Download Now</span>
-    </a>
+      <span>{children}</span>
+    </Link>
   );
 }
 
 export default function HomePageClient() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [mascotWidth, setMascotWidth] = useState<number>();
-  const [renderVersion, setRenderVersion] = useState(0);
-  const [waveAmplitude, setWaveAmplitude] = useState(DESKTOP_WAVE_AMPLITUDE);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const restoreFrameRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  useEffect(() => {
-    function syncWaveAmplitude() {
-      const nextAmplitude = Math.max(
-        MIN_WAVE_AMPLITUDE,
-        Math.min(
-          DESKTOP_WAVE_AMPLITUDE,
-          (window.innerWidth / DESKTOP_WAVE_REFERENCE_WIDTH) * DESKTOP_WAVE_AMPLITUDE,
-        ),
-      );
-
-      setWaveAmplitude(nextAmplitude);
-    }
-
-    syncWaveAmplitude();
-    window.addEventListener("resize", syncWaveAmplitude);
-
-    return () => {
-      window.removeEventListener("resize", syncWaveAmplitude);
-    };
-  }, []);
-
-  useEffect(() => {
-    function forceCompositeRepaint() {
-      document.body.classList.add("den-force-repaint");
-      void document.body.offsetHeight;
-
-      window.requestAnimationFrame(() => {
-        document.body.classList.remove("den-force-repaint");
-      });
-    }
-
-    function restoreFromExternalNavigation() {
-      if (window.sessionStorage.getItem(EXTERNAL_NAV_RETURN_KEY) !== "1") {
-        return;
-      }
-
-      window.sessionStorage.removeItem(EXTERNAL_NAV_RETURN_KEY);
-      setRenderVersion((current) => current + 1);
-      forceCompositeRepaint();
-    }
-
-    function scheduleRestore() {
-      if (restoreFrameRef.current !== null) {
-        window.cancelAnimationFrame(restoreFrameRef.current);
-      }
-
-      restoreFrameRef.current = window.requestAnimationFrame(() => {
-        restoreFrameRef.current = null;
-        restoreFromExternalNavigation();
-      });
-    }
-
-    function handlePageShow() {
-      setMenuOpen(false);
-      scheduleRestore();
-    }
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === "visible") {
-        scheduleRestore();
-      }
-    }
-
-    window.addEventListener("pageshow", handlePageShow);
-    window.addEventListener("focus", scheduleRestore);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      if (restoreFrameRef.current !== null) {
-        window.cancelAnimationFrame(restoreFrameRef.current);
-      }
-
-      window.removeEventListener("pageshow", handlePageShow);
-      window.removeEventListener("focus", scheduleRestore);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    function syncWidth() {
-      if (!headlineRef.current) {
-        return;
-      }
-
-      setMascotWidth(headlineRef.current.offsetWidth);
-    }
-
-    syncWidth();
-
-    const observer =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(syncWidth)
-        : null;
-
-    if (headlineRef.current && observer) {
-      observer.observe(headlineRef.current);
-    }
-
-    window.addEventListener("resize", syncWidth);
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", syncWidth);
-    };
-  }, []);
-
-  useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      const target = event.target as Node;
-
-      if (
-        menuRef.current?.contains(target) ||
-        menuButtonRef.current?.contains(target)
-      ) {
-        return;
-      }
-
-      setMenuOpen(false);
-    }
-
-    if (menuOpen) {
-      document.addEventListener("mousedown", handlePointerDown);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-    };
-  }, [menuOpen]);
-
-  function handlePrivacyNavigation() {
-    setMenuOpen(false);
-  }
-
-  function handleTermsNavigation() {
-    setMenuOpen(false);
-    window.sessionStorage.setItem(EXTERNAL_NAV_RETURN_KEY, "1");
+  function markExternalNavigation() {
+    window.sessionStorage.setItem("den:return-from-external", "1");
   }
 
   return (
-    <main className="den-landing" key={renderVersion}>
-      <div aria-hidden="true" className="den-wavy-container">
-        <svg
-          height="100%"
-          preserveAspectRatio="none"
-          viewBox="0 0 1000 1000"
-          width="100%"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {Array.from({ length: 50 }, (_, index) => {
-            const y = 20 + index * 20;
-            const glow = index % 3 === 0;
+    <main className="den-landing">
+      <div className="den-main-screen">
+        <div className="den-background" aria-hidden="true" />
 
-            return (
-              <g key={y}>
-                <path
-                  className="den-wavy-path"
-                  d={`M0 ${y} Q 250 ${y - waveAmplitude}, 500 ${y} T 1000 ${y}`}
-                />
-                {glow ? (
-                  <path
-                    className="den-glow-line"
-                    d={`M0 ${y} Q 250 ${y - waveAmplitude}, 500 ${y} T 1000 ${y}`}
-                    style={{
-                      animationDelay: `${-(index % 13) - index / 3}s`,
-                    }}
-                  />
-                ) : null}
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      <div className="den-menu-shell">
-        <button
-          ref={menuButtonRef}
-          aria-expanded={menuOpen}
-          aria-label="Toggle menu"
-          className={`den-menu-toggle${menuOpen ? " open" : ""}`}
-          onClick={() => setMenuOpen((current) => !current)}
-          type="button"
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-
-        <div
-          ref={menuRef}
-          className={`den-mobile-menu${menuOpen ? " open" : ""}`}
-        >
-          <Link href={PRIVACY_POLICY_URL} onClick={handlePrivacyNavigation} scroll>
-            Privacy Policy
-          </Link>
-          <a
-            href={APPLE_STANDARD_EULA_URL}
-            onClick={handleTermsNavigation}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Terms of Service
-          </a>
+        <div className="den-verse-field" aria-hidden="true">
+          {Array.from({ length: VERSE_ROW_COUNT }, (_, index) => (
+            <VerseMarquee
+              key={`verse-row-${index}`}
+              rowIndex={index}
+              verses={getVerseRow(index)}
+            />
+          ))}
         </div>
-      </div>
 
-      <section className="den-hero">
-        <div className="den-hero-inner">
-          <h1 className="den-hero-title">
-            <span className="den-brand-dark">The</span>{" "}
-            <span className="den-brand-light">Den</span>{" "}
-            <span className="den-brand-dark">App</span>
-            <span className="den-title-break" />
-            <span className="den-brand-dark den-title-nowrap den-title-secondary">
-              Bible, Social, More.
-            </span>
-          </h1>
-
-          <p className="den-hero-copy">
-            <span className="den-hero-copy-line">
-              Grow your relationship with the Lord{" "}
-              <span className="den-hero-copy-nowrap">and your friends</span>
-            </span>
-            <span className="den-hero-copy-line">
-              Den is here to help you on your journey
-            </span>
-          </p>
-
-          <div className="den-hero-action">
-            <DownloadButton />
+        <section className="den-brand-lockup" aria-label="Den">
+          <div className="den-logo-row">
+            <Image
+              alt="Den"
+              className="den-logo"
+              height={1024}
+              priority
+              src="/IconTransparent.svg"
+              width={1024}
+            />
+            <span className="den-logo-word">EN</span>
           </div>
-        </div>
-      </section>
+          <h1>Your Friends. Your Bible.</h1>
+        </section>
 
-      <section className="den-feature-section">
-        {featureRows.map((row, rowIndex) => (
-          <div className="den-carousel-row" key={`row-${rowIndex}`}>
-            <div
-              className={`den-carousel-track${rowIndex === 1 ? " reverse" : ""}`}
-            >
-              {[...row, ...row].map((card, cardIndex) => (
-                <article className="den-feature-card" key={`${card.title}-${cardIndex}`}>
-                  <h2>{card.title}</h2>
-                  <p>{card.body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        ))}
-      </section>
-
-      <section className="den-cta-section">
-        <div className="den-cta-divider" />
-        <h2 className="den-cta-title" ref={headlineRef}>
-          <span className="den-brand-dark">Get started with</span>{" "}
-          <span className="den-brand-light">Den</span>
-        </h2>
-
-        <DownloadButton />
-
-        <div className="den-mascot-wrap">
+        <a
+          aria-label="Download on the App Store"
+          className="den-app-store-link"
+          href={APP_STORE_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
           <Image
-            alt="Den Bible app icon"
-            className="den-mascot-image"
-            height={1024}
+            alt="Download on the App Store"
+            className="den-app-store-badge"
+            height={70}
             priority
-            src="/Icon.png"
-            style={mascotWidth ? { width: `${mascotWidth}px` } : undefined}
-            width={1024}
+            src="/Mobile app store badge.svg"
+            width={210}
           />
-        </div>
-      </section>
+        </a>
 
-      <footer className="den-footer">
-        <div className="den-footer-inner">
-          <div className="den-footer-copy">&copy; 2024 DEN. ALL RIGHTS RESERVED.</div>
-
-          <div className="den-footer-links">
-            <Link href={PRIVACY_POLICY_URL} onClick={handlePrivacyNavigation} scroll>
-              Privacy Policy
-            </Link>
-            <a
+        <footer className="den-legal-nav" aria-label="Legal">
+          <div className="den-legal-row">
+            <LegalLink
               href={APPLE_STANDARD_EULA_URL}
-              onClick={handleTermsNavigation}
-              rel="noopener noreferrer"
+              onClick={markExternalNavigation}
               target="_blank"
             >
-              Terms of Service
-            </a>
+              Terms
+            </LegalLink>
+            <span aria-hidden="true">&amp;</span>
+            <LegalLink href={PRIVACY_POLICY_URL}>Privacy</LegalLink>
           </div>
-        </div>
-      </footer>
+          <div className="den-copyright-row">
+            <span className="den-copyright-symbol" aria-hidden="true">
+              &copy;
+            </span>
+            <span className="den-copyright">2026 James Griffin Britt.</span>
+          </div>
+        </footer>
+      </div>
+
+      <div className="den-splash" aria-hidden="true">
+        <div className="den-background" />
+        <Image
+          alt=""
+          className="den-splash-cross"
+          height={373}
+          priority
+          src="/CrusaderCross.svg"
+          width={373}
+        />
+      </div>
     </main>
   );
 }
