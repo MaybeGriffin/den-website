@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties, PointerEvent as ReactPointerEvent, TouchEvent as ReactTouchEvent } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useLayoutEffect, useRef } from "react";
 import { APPLE_STANDARD_EULA_URL } from "@/lib/legal";
 
@@ -208,6 +208,7 @@ export default function HomePageClient() {
   const brandTitleRef = useRef<HTMLHeadingElement>(null);
   const appStoreLinkRef = useRef<HTMLAnchorElement>(null);
   const legalNavRef = useRef<HTMLElement>(null);
+  const activeTouchIdRef = useRef<number | null>(null);
 
   function markExternalNavigation() {
     window.sessionStorage.setItem("den:return-from-external", "1");
@@ -304,7 +305,7 @@ export default function HomePageClient() {
     );
   }
 
-  function updateSpotlightMask(clientX: number, clientY: number) {
+  function updateSpotlightMask(clientX: number, clientY: number, includeProtectedRects = true) {
     const mainScreen = mainScreenRef.current;
     const spotlightMask = spotlightMaskRef.current;
     const spotlightGradient = spotlightGradientRef.current;
@@ -327,13 +328,15 @@ export default function HomePageClient() {
     const pointerX = clientX - mainRect.left;
     const pointerY = clientY - mainRect.top;
     const radius = getSpotlightRadius();
-    const protectedRects = [
-      appStoreLinkRef.current?.getBoundingClientRect(),
-      legalNavRef.current?.getBoundingClientRect(),
-      getVisibleLogoArtRect(),
-      logoWordRef.current?.getBoundingClientRect(),
-      brandTitleRef.current?.getBoundingClientRect(),
-    ].filter((rect) => doesSpotlightIntersectRect(rect, pointerX, pointerY, radius, VERSE_PROTECTED_FEATHER_PX));
+    const protectedRects = includeProtectedRects
+      ? [
+          appStoreLinkRef.current?.getBoundingClientRect(),
+          legalNavRef.current?.getBoundingClientRect(),
+          getVisibleLogoArtRect(),
+          logoWordRef.current?.getBoundingClientRect(),
+          brandTitleRef.current?.getBoundingClientRect(),
+        ].filter((rect) => doesSpotlightIntersectRect(rect, pointerX, pointerY, radius, VERSE_PROTECTED_FEATHER_PX))
+      : [];
     const protectedPaths = protectedRects.map((rect) => getProtectedPath(rect)).join(" ");
     const featherPaths = protectedRects
       .map((rect) => getProtectedPath(rect, VERSE_PROTECTED_FEATHER_PX))
@@ -352,7 +355,7 @@ export default function HomePageClient() {
     spotlightFeatherPath.setAttribute("d", featherPaths);
   }
 
-  function updateVerseSpotlightFromPoint(clientX: number, clientY: number) {
+  function updateVerseSpotlightFromPoint(clientX: number, clientY: number, includeProtectedRects = true) {
     const mainScreen = mainScreenRef.current;
 
     if (!mainScreen) {
@@ -361,7 +364,7 @@ export default function HomePageClient() {
     }
 
     const rect = mainScreen.getBoundingClientRect();
-    updateSpotlightMask(clientX, clientY);
+    updateSpotlightMask(clientX, clientY, includeProtectedRects);
     mainScreen.style.setProperty("--den-verse-spotlight-x", `${clientX - rect.left}px`);
     mainScreen.style.setProperty("--den-verse-spotlight-y", `${clientY - rect.top}px`);
     mainScreen.style.setProperty("--den-verse-spotlight-radius", `${getSpotlightRadius()}px`);
@@ -369,35 +372,85 @@ export default function HomePageClient() {
   }
 
   function updateVerseSpotlight(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.pointerType !== "mouse" && !event.isPrimary) {
+    if (event.pointerType !== "mouse") {
       return;
     }
 
     updateVerseSpotlightFromPoint(event.clientX, event.clientY);
   }
 
-  function updateVerseSpotlightFromTouch(event: ReactTouchEvent<HTMLDivElement>) {
-    const touch = event.touches[0] ?? event.changedTouches[0];
+  useLayoutEffect(() => {
+    const mainScreen = mainScreenRef.current;
 
-    if (!touch) {
-      hideVerseSpotlight();
-      return;
+    if (!mainScreen) {
+      return undefined;
     }
 
-    updateVerseSpotlightFromPoint(touch.clientX, touch.clientY);
-  }
+    function getTrackedTouch(touches: TouchList) {
+      const activeTouchId = activeTouchIdRef.current;
 
-  function endTouchSpotlight(event: ReactTouchEvent<HTMLDivElement>) {
-    if (event.touches.length === 0) {
+      if (activeTouchId === null) {
+        return touches[0];
+      }
+
+      for (let index = 0; index < touches.length; index += 1) {
+        const touch = touches.item(index);
+
+        if (touch?.identifier === activeTouchId) {
+          return touch;
+        }
+      }
+
+      return undefined;
+    }
+
+    function handleTouchStart(event: TouchEvent) {
+      const touch = event.changedTouches[0];
+
+      if (!touch) {
+        return;
+      }
+
+      activeTouchIdRef.current = touch.identifier;
+      event.preventDefault();
+      updateVerseSpotlightFromPoint(touch.clientX, touch.clientY, false);
+    }
+
+    function handleTouchMove(event: TouchEvent) {
+      const touch = getTrackedTouch(event.touches);
+
+      if (!touch) {
+        return;
+      }
+
+      event.preventDefault();
+      updateVerseSpotlightFromPoint(touch.clientX, touch.clientY, false);
+    }
+
+    function handleTouchEnd(event: TouchEvent) {
+      const touch = getTrackedTouch(event.changedTouches);
+
+      if (!touch) {
+        return;
+      }
+
+      event.preventDefault();
+      activeTouchIdRef.current = null;
       hideVerseSpotlight();
     }
-  }
 
-  function endPointerSpotlight(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.pointerType !== "mouse") {
-      hideVerseSpotlight();
-    }
-  }
+    mainScreen.addEventListener("touchstart", handleTouchStart, { passive: false });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleTouchEnd, { passive: false });
+    document.addEventListener("touchcancel", handleTouchEnd, { passive: false });
+
+    return () => {
+      mainScreen.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("touchcancel", handleTouchEnd);
+    };
+  });
 
   return (
     <main className="den-landing">
@@ -407,11 +460,6 @@ export default function HomePageClient() {
         onPointerDown={updateVerseSpotlight}
         onPointerLeave={hideVerseSpotlight}
         onPointerMove={updateVerseSpotlight}
-        onPointerUp={endPointerSpotlight}
-        onTouchCancel={endTouchSpotlight}
-        onTouchEnd={endTouchSpotlight}
-        onTouchMove={updateVerseSpotlightFromTouch}
-        onTouchStart={updateVerseSpotlightFromTouch}
         ref={mainScreenRef}
       >
         <div className="den-background" aria-hidden="true" />
