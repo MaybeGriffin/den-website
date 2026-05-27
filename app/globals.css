@@ -84,9 +84,7 @@ button {
   --den-verse-spotlight-y: -999px;
   min-height: 100svh;
   overflow: hidden;
-  opacity: 0;
-  animation: denMainFadeIn 1s ease forwards;
-  animation-delay: 1.5s;
+  opacity: 1;
   touch-action: none;
 }
 
@@ -611,16 +609,10 @@ button {
   }
 }
 
-@keyframes denMainFadeIn {
-  to {
-    opacity: 1;
-  }
-}
-
 @media (max-width: 720px) {
   .den-landing {
-    --den-bottom-gap: max(14px, calc(env(safe-area-inset-bottom, 0px) + 8px));
-    --den-legal-bottom-gap: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
+    --den-bottom-gap: 0px;
+    --den-legal-bottom-gap: 0px;
     --den-logo-size: clamp(92px, 25vw, 118px);
     --den-word-size: clamp(13px, 3.65vw, 15px);
     --den-title-size: clamp(24px, 6.7vw, 28px);
