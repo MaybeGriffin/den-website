@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent, TouchEvent as ReactTouchEvent } from "react";
 import { useLayoutEffect, useRef } from "react";
 import { APPLE_STANDARD_EULA_URL } from "@/lib/legal";
 
@@ -264,6 +264,27 @@ export default function HomePageClient() {
     return getRoundedRectPath(left, top, right, bottom);
   }
 
+  function doesSpotlightIntersectRect(rect: DOMRect | undefined, pointerX: number, pointerY: number, radius: number, extraPadding = 0) {
+    const mainScreen = mainScreenRef.current;
+
+    if (!mainScreen || !rect) {
+      return false;
+    }
+
+    const mainRect = mainScreen.getBoundingClientRect();
+    const padding = VERSE_PROTECTED_GAP_PX + extraPadding;
+    const left = rect.left - mainRect.left - padding;
+    const top = rect.top - mainRect.top - padding;
+    const right = rect.right - mainRect.left + padding;
+    const bottom = rect.bottom - mainRect.top + padding;
+    const closestX = Math.min(Math.max(pointerX, left), right);
+    const closestY = Math.min(Math.max(pointerY, top), bottom);
+    const distanceX = pointerX - closestX;
+    const distanceY = pointerY - closestY;
+
+    return distanceX * distanceX + distanceY * distanceY <= radius * radius;
+  }
+
   function getVisibleLogoArtRect() {
     const logo = logoRef.current;
 
@@ -312,7 +333,7 @@ export default function HomePageClient() {
       getVisibleLogoArtRect(),
       logoWordRef.current?.getBoundingClientRect(),
       brandTitleRef.current?.getBoundingClientRect(),
-    ];
+    ].filter((rect) => doesSpotlightIntersectRect(rect, pointerX, pointerY, radius, VERSE_PROTECTED_FEATHER_PX));
     const protectedPaths = protectedRects.map((rect) => getProtectedPath(rect)).join(" ");
     const featherPaths = protectedRects
       .map((rect) => getProtectedPath(rect, VERSE_PROTECTED_FEATHER_PX))
@@ -331,11 +352,7 @@ export default function HomePageClient() {
     spotlightFeatherPath.setAttribute("d", featherPaths);
   }
 
-  function updateVerseSpotlight(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.pointerType !== "mouse" && !event.isPrimary) {
-      return;
-    }
-
+  function updateVerseSpotlightFromPoint(clientX: number, clientY: number) {
     const mainScreen = mainScreenRef.current;
 
     if (!mainScreen) {
@@ -344,11 +361,42 @@ export default function HomePageClient() {
     }
 
     const rect = mainScreen.getBoundingClientRect();
-    updateSpotlightMask(event.clientX, event.clientY);
-    mainScreen.style.setProperty("--den-verse-spotlight-x", `${event.clientX - rect.left}px`);
-    mainScreen.style.setProperty("--den-verse-spotlight-y", `${event.clientY - rect.top}px`);
+    updateSpotlightMask(clientX, clientY);
+    mainScreen.style.setProperty("--den-verse-spotlight-x", `${clientX - rect.left}px`);
+    mainScreen.style.setProperty("--den-verse-spotlight-y", `${clientY - rect.top}px`);
     mainScreen.style.setProperty("--den-verse-spotlight-radius", `${getSpotlightRadius()}px`);
     mainScreen.style.setProperty("--den-verse-spotlight-active", "1");
+  }
+
+  function updateVerseSpotlight(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse" && !event.isPrimary) {
+      return;
+    }
+
+    updateVerseSpotlightFromPoint(event.clientX, event.clientY);
+  }
+
+  function updateVerseSpotlightFromTouch(event: ReactTouchEvent<HTMLDivElement>) {
+    const touch = event.touches[0] ?? event.changedTouches[0];
+
+    if (!touch) {
+      hideVerseSpotlight();
+      return;
+    }
+
+    updateVerseSpotlightFromPoint(touch.clientX, touch.clientY);
+  }
+
+  function endTouchSpotlight(event: ReactTouchEvent<HTMLDivElement>) {
+    if (event.touches.length === 0) {
+      hideVerseSpotlight();
+    }
+  }
+
+  function endPointerSpotlight(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse") {
+      hideVerseSpotlight();
+    }
   }
 
   return (
@@ -359,6 +407,11 @@ export default function HomePageClient() {
         onPointerDown={updateVerseSpotlight}
         onPointerLeave={hideVerseSpotlight}
         onPointerMove={updateVerseSpotlight}
+        onPointerUp={endPointerSpotlight}
+        onTouchCancel={endTouchSpotlight}
+        onTouchEnd={endTouchSpotlight}
+        onTouchMove={updateVerseSpotlightFromTouch}
+        onTouchStart={updateVerseSpotlightFromTouch}
         ref={mainScreenRef}
       >
         <div className="den-background" aria-hidden="true" />
