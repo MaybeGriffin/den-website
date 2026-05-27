@@ -104,13 +104,6 @@ button {
   background: radial-gradient(circle at center, transparent 0 38%, rgba(0, 0, 0, 0.28) 100%);
 }
 
-.den-spotlight-mask {
-  position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-
 .den-splash {
   z-index: 20;
   display: grid;
@@ -139,7 +132,15 @@ button {
 }
 
 .den-verse-field--spotlight {
-  mask: url("#den-verse-spotlight-mask");
+  --den-verse-spotlight-mask: radial-gradient(
+    circle var(--den-verse-spotlight-radius) at var(--den-verse-spotlight-x) var(--den-verse-spotlight-y),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.7) 28%,
+    rgba(0, 0, 0, 0.34) 62%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: var(--den-verse-spotlight-mask);
+  -webkit-mask-image: var(--den-verse-spotlight-mask);
   opacity: var(--den-verse-spotlight-active);
   transition: opacity 120ms ease;
 }
