@@ -53,6 +53,8 @@ button {
 }
 
 .den-landing {
+  --den-bottom-gap: max(clamp(24px, 4.235svh, 49px), calc(env(safe-area-inset-bottom, 0px) + 24px));
+  --den-legal-bottom-gap: max(clamp(24px, 4.883svh, 56.5px), calc(env(safe-area-inset-bottom, 0px) + 24px));
   --den-logo-size: clamp(92px, min(11.6vw, 17.37svh), 201px);
   --den-word-size: clamp(13px, min(1.212vw, 1.815svh), 21px);
   --den-title-size: clamp(24px, min(2.827vw, 4.235svh), 49px);
@@ -86,6 +88,18 @@ button {
   animation: denMainFadeIn 1s ease forwards;
   animation-delay: 1.5s;
   touch-action: none;
+}
+
+@supports (height: 100dvh) {
+  .den-landing {
+    min-height: 100dvh;
+  }
+
+  .den-main-screen,
+  .den-splash {
+    bottom: auto;
+    height: 100dvh;
+  }
 }
 
 .den-background {
@@ -240,7 +254,7 @@ button {
 .den-app-store-link {
   position: absolute;
   right: clamp(16px, 2.55vw, 49px);
-  bottom: max(clamp(24px, 4.235svh, 49px), calc(env(safe-area-inset-bottom) + 24px));
+  bottom: var(--den-bottom-gap);
   z-index: 1;
   display: block;
   width: var(--den-app-badge-width);
@@ -264,7 +278,7 @@ button {
 .den-legal-nav {
   position: absolute;
   left: clamp(16px, 2.423vw, 42px);
-  bottom: max(clamp(24px, 4.883svh, 56.5px), calc(env(safe-area-inset-bottom) + 24px));
+  bottom: var(--den-legal-bottom-gap);
   z-index: 1;
   display: grid;
   gap: clamp(2px, 0.26svh, 3px);
@@ -605,6 +619,8 @@ button {
 
 @media (max-width: 720px) {
   .den-landing {
+    --den-bottom-gap: max(14px, calc(env(safe-area-inset-bottom, 0px) + 8px));
+    --den-legal-bottom-gap: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
     --den-logo-size: clamp(92px, 25vw, 118px);
     --den-word-size: clamp(13px, 3.65vw, 15px);
     --den-title-size: clamp(24px, 6.7vw, 28px);
@@ -626,13 +642,11 @@ button {
 
   .den-app-store-link {
     right: clamp(16px, 4.2vw, 22px);
-    bottom: max(22px, calc(env(safe-area-inset-bottom) + 22px));
     width: var(--den-app-badge-width);
   }
 
   .den-legal-nav {
     left: 16px;
-    bottom: max(24px, calc(env(safe-area-inset-bottom) + 24px));
   }
 
   .page-shell {
