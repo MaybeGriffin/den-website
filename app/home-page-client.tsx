@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useLayoutEffect, useRef } from "react";
 import { APPLE_STANDARD_EULA_URL } from "@/lib/legal";
 
@@ -13,6 +13,12 @@ const VERSES_PER_ROW = 18;
 const VERSE_GAP_PX = 21;
 const VERSE_EDGE_INSET_PX = 0;
 const VERSE_SPEED_PX_PER_SECOND = 11;
+const VERSE_PROTECTED_GAP_PX = 14;
+const VERSE_PROTECTED_FEATHER_PX = 12;
+const LOGO_VISIBLE_ART_INSET_RATIO = 0.256;
+const SPOTLIGHT_RADIUS_MIN_PX = 34;
+const SPOTLIGHT_RADIUS_MAX_PX = 70;
+const SPOTLIGHT_RADIUS_VW = 0.1;
 
 const verseRowOpacities = [
   0.12, 0.14, 0.17, 0.19, 0.17, 0.14, 0.12, 0.12,
@@ -191,19 +197,205 @@ function LegalLink({
 }
 
 export default function HomePageClient() {
+  const mainScreenRef = useRef<HTMLDivElement>(null);
+  const spotlightMaskRef = useRef<SVGMaskElement>(null);
+  const spotlightGradientRef = useRef<SVGRadialGradientElement>(null);
+  const spotlightGradientRectRef = useRef<SVGRectElement>(null);
+  const spotlightHolePathRef = useRef<SVGPathElement>(null);
+  const spotlightFeatherPathRef = useRef<SVGPathElement>(null);
+  const logoRef = useRef<HTMLImageElement>(null);
+  const logoWordRef = useRef<HTMLSpanElement>(null);
+  const brandTitleRef = useRef<HTMLHeadingElement>(null);
+  const appStoreLinkRef = useRef<HTMLAnchorElement>(null);
+  const legalNavRef = useRef<HTMLElement>(null);
+
   function markExternalNavigation() {
     window.sessionStorage.setItem("den:return-from-external", "1");
   }
 
+  function hideVerseSpotlight() {
+    mainScreenRef.current?.style.setProperty("--den-verse-spotlight-active", "0");
+  }
+
+  function getSpotlightRadius() {
+    return Math.min(
+      SPOTLIGHT_RADIUS_MAX_PX,
+      Math.max(SPOTLIGHT_RADIUS_MIN_PX, window.innerWidth * SPOTLIGHT_RADIUS_VW),
+    );
+  }
+
+  function getRoundedRectPath(left: number, top: number, right: number, bottom: number) {
+    const width = right - left;
+    const height = bottom - top;
+    const radius = Math.min(18, width / 2, height / 2);
+
+    return [
+      `M ${left + radius} ${top}`,
+      `H ${right - radius}`,
+      `Q ${right} ${top} ${right} ${top + radius}`,
+      `V ${bottom - radius}`,
+      `Q ${right} ${bottom} ${right - radius} ${bottom}`,
+      `H ${left + radius}`,
+      `Q ${left} ${bottom} ${left} ${bottom - radius}`,
+      `V ${top + radius}`,
+      `Q ${left} ${top} ${left + radius} ${top}`,
+      "Z",
+    ].join(" ");
+  }
+
+  function getProtectedPath(rect?: DOMRect, extraPadding = 0) {
+    const mainScreen = mainScreenRef.current;
+
+    if (!mainScreen || !rect) {
+      return "";
+    }
+
+    const mainRect = mainScreen.getBoundingClientRect();
+    const padding = VERSE_PROTECTED_GAP_PX + extraPadding;
+    const left = Math.max(0, rect.left - mainRect.left - padding);
+    const top = Math.max(0, rect.top - mainRect.top - padding);
+    const right = Math.min(mainRect.width, rect.right - mainRect.left + padding);
+    const bottom = Math.min(mainRect.height, rect.bottom - mainRect.top + padding);
+
+    if (right <= left || bottom <= top) {
+      return "";
+    }
+
+    return getRoundedRectPath(left, top, right, bottom);
+  }
+
+  function getVisibleLogoArtRect() {
+    const logo = logoRef.current;
+
+    if (!logo) {
+      return undefined;
+    }
+
+    const rect = logo.getBoundingClientRect();
+    const insetX = rect.width * LOGO_VISIBLE_ART_INSET_RATIO;
+    const insetY = rect.height * LOGO_VISIBLE_ART_INSET_RATIO;
+
+    return new DOMRect(
+      rect.left + insetX,
+      rect.top + insetY,
+      rect.width - insetX * 2,
+      rect.height - insetY * 2,
+    );
+  }
+
+  function updateSpotlightMask(clientX: number, clientY: number) {
+    const mainScreen = mainScreenRef.current;
+    const spotlightMask = spotlightMaskRef.current;
+    const spotlightGradient = spotlightGradientRef.current;
+    const spotlightGradientRect = spotlightGradientRectRef.current;
+    const spotlightHolePath = spotlightHolePathRef.current;
+    const spotlightFeatherPath = spotlightFeatherPathRef.current;
+
+    if (
+      !mainScreen ||
+      !spotlightMask ||
+      !spotlightGradient ||
+      !spotlightGradientRect ||
+      !spotlightHolePath ||
+      !spotlightFeatherPath
+    ) {
+      return;
+    }
+
+    const mainRect = mainScreen.getBoundingClientRect();
+    const pointerX = clientX - mainRect.left;
+    const pointerY = clientY - mainRect.top;
+    const radius = getSpotlightRadius();
+    const protectedRects = [
+      appStoreLinkRef.current?.getBoundingClientRect(),
+      legalNavRef.current?.getBoundingClientRect(),
+      getVisibleLogoArtRect(),
+      logoWordRef.current?.getBoundingClientRect(),
+      brandTitleRef.current?.getBoundingClientRect(),
+    ];
+    const protectedPaths = protectedRects.map((rect) => getProtectedPath(rect)).join(" ");
+    const featherPaths = protectedRects
+      .map((rect) => getProtectedPath(rect, VERSE_PROTECTED_FEATHER_PX))
+      .join(" ");
+
+    spotlightMask.setAttribute("x", "0");
+    spotlightMask.setAttribute("y", "0");
+    spotlightMask.setAttribute("width", `${mainRect.width}`);
+    spotlightMask.setAttribute("height", `${mainRect.height}`);
+    spotlightGradient.setAttribute("cx", `${pointerX}`);
+    spotlightGradient.setAttribute("cy", `${pointerY}`);
+    spotlightGradient.setAttribute("r", `${radius}`);
+    spotlightGradientRect.setAttribute("width", `${mainRect.width}`);
+    spotlightGradientRect.setAttribute("height", `${mainRect.height}`);
+    spotlightHolePath.setAttribute("d", protectedPaths);
+    spotlightFeatherPath.setAttribute("d", featherPaths);
+  }
+
+  function updateVerseSpotlight(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse" && !event.isPrimary) {
+      return;
+    }
+
+    const mainScreen = mainScreenRef.current;
+
+    if (!mainScreen) {
+      hideVerseSpotlight();
+      return;
+    }
+
+    const rect = mainScreen.getBoundingClientRect();
+    updateSpotlightMask(event.clientX, event.clientY);
+    mainScreen.style.setProperty("--den-verse-spotlight-x", `${event.clientX - rect.left}px`);
+    mainScreen.style.setProperty("--den-verse-spotlight-y", `${event.clientY - rect.top}px`);
+    mainScreen.style.setProperty("--den-verse-spotlight-radius", `${getSpotlightRadius()}px`);
+    mainScreen.style.setProperty("--den-verse-spotlight-active", "1");
+  }
+
   return (
     <main className="den-landing">
-      <div className="den-main-screen">
+      <div
+        className="den-main-screen"
+        onPointerCancel={hideVerseSpotlight}
+        onPointerDown={updateVerseSpotlight}
+        onPointerLeave={hideVerseSpotlight}
+        onPointerMove={updateVerseSpotlight}
+        ref={mainScreenRef}
+      >
         <div className="den-background" aria-hidden="true" />
+
+        <svg className="den-spotlight-mask" aria-hidden="true">
+          <defs>
+            <radialGradient id="den-verse-spotlight-gradient" ref={spotlightGradientRef} gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="white" stopOpacity="1" />
+              <stop offset="28%" stopColor="white" stopOpacity="0.7" />
+              <stop offset="62%" stopColor="white" stopOpacity="0.34" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </radialGradient>
+            <filter id="den-verse-spotlight-feather">
+              <feGaussianBlur stdDeviation="7" />
+            </filter>
+            <mask id="den-verse-spotlight-mask" ref={spotlightMaskRef} maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+              <rect ref={spotlightGradientRectRef} x="0" y="0" fill="url(#den-verse-spotlight-gradient)" />
+              <path ref={spotlightFeatherPathRef} d="" fill="black" opacity="0.95" filter="url(#den-verse-spotlight-feather)" />
+              <path ref={spotlightHolePathRef} d="" fill="black" />
+            </mask>
+          </defs>
+        </svg>
 
         <div className="den-verse-field" aria-hidden="true">
           {Array.from({ length: VERSE_ROW_COUNT }, (_, index) => (
             <VerseMarquee
               key={`verse-row-${index}`}
+              rowIndex={index}
+              verses={getVerseRow(index)}
+            />
+          ))}
+        </div>
+
+        <div className="den-verse-field den-verse-field--spotlight" aria-hidden="true">
+          {Array.from({ length: VERSE_ROW_COUNT }, (_, index) => (
+            <VerseMarquee
+              key={`verse-spotlight-row-${index}`}
               rowIndex={index}
               verses={getVerseRow(index)}
             />
@@ -217,18 +409,20 @@ export default function HomePageClient() {
               className="den-logo"
               height={1024}
               priority
+              ref={logoRef}
               src="/IconTransparent.svg"
               width={1024}
             />
-            <span className="den-logo-word">EN</span>
+            <span className="den-logo-word" ref={logoWordRef}>EN</span>
           </div>
-          <h1>Your Friends. Your Bible.</h1>
+          <h1 ref={brandTitleRef}>Your Friends. Your Bible.</h1>
         </section>
 
         <a
           aria-label="Download on the App Store"
           className="den-app-store-link"
           href={APP_STORE_URL}
+          ref={appStoreLinkRef}
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -242,7 +436,7 @@ export default function HomePageClient() {
           />
         </a>
 
-        <footer className="den-legal-nav" aria-label="Legal">
+        <footer className="den-legal-nav" aria-label="Legal" ref={legalNavRef}>
           <div className="den-legal-row">
             <LegalLink
               href={APPLE_STANDARD_EULA_URL}

@@ -76,11 +76,16 @@ button {
 }
 
 .den-main-screen {
+  --den-verse-spotlight-active: 0;
+  --den-verse-spotlight-radius: clamp(34px, 10vw, 70px);
+  --den-verse-spotlight-x: -999px;
+  --den-verse-spotlight-y: -999px;
   min-height: 100svh;
   overflow: hidden;
   opacity: 0;
   animation: denMainFadeIn 1s ease forwards;
   animation-delay: 1.5s;
+  touch-action: none;
 }
 
 .den-background {
@@ -97,6 +102,13 @@ button {
   position: absolute;
   inset: 0;
   background: radial-gradient(circle at center, transparent 0 38%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+.den-spotlight-mask {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
 }
 
 .den-splash {
@@ -124,6 +136,16 @@ button {
   padding: 14px 14px 12px;
   pointer-events: none;
   user-select: none;
+}
+
+.den-verse-field--spotlight {
+  mask: url("#den-verse-spotlight-mask");
+  opacity: var(--den-verse-spotlight-active);
+  transition: opacity 120ms ease;
+}
+
+.den-verse-field--spotlight .den-verse-line {
+  color: rgba(163, 163, 163, 0.73);
 }
 
 .den-verse-row {
