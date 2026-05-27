@@ -278,58 +278,27 @@ button {
 
 .den-legal-link {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: inline-block;
   color: #ffffff;
   font-family: "TikTok Sans", sans-serif;
   font-size: var(--den-legal-size);
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.27;
-}
-
-.den-legal-link::before,
-.den-legal-link::after,
-.den-legal-link span {
-  grid-area: 1 / 1;
-}
-
-.den-legal-link::before,
-.den-legal-link::after {
-  content: attr(data-label);
-  font-weight: 700;
-}
-
-.den-legal-link::before {
-  visibility: hidden;
-}
-
-.den-legal-link::after {
-  color: #ffffff;
-  opacity: 0;
-  transition: opacity 220ms ease;
+  transform: translate3d(0, 0, 0);
+  transform-origin: center;
+  transition: transform 180ms ease;
+  will-change: transform;
 }
 
 .den-legal-link span {
+  display: block;
   font-weight: 700;
-  transition: opacity 220ms ease, color 220ms ease, transform 180ms ease;
 }
 
 .den-legal-link:hover,
 .den-legal-link:focus-visible {
-  font-weight: 700;
-  transform: scale(1.06);
-  transform-origin: center;
-}
-
-.den-legal-link:hover::after,
-.den-legal-link:focus-visible::after {
-  opacity: 1;
-}
-
-.den-legal-link:hover span,
-.den-legal-link:focus-visible span {
-  opacity: 0;
+  transform: translate3d(0, -2px, 0) scale(1.06);
 }
 
 .den-legal-row > span,
