@@ -46,6 +46,12 @@ function getVerseRow(rowIndex: number) {
   });
 }
 
+function isInteractiveElement(target: EventTarget | null) {
+  return target instanceof Element
+    ? Boolean(target.closest("a, button, input, textarea, select, summary, [role='button'], [role='link']"))
+    : false;
+}
+
 type VerseMarqueeProps = {
   rowIndex: number;
   verses: string[];
@@ -246,7 +252,7 @@ export default function HomePageClient() {
       const activeTouchId = activeTouchIdRef.current;
 
       if (activeTouchId === null) {
-        return touches[0];
+        return undefined;
       }
 
       for (let index = 0; index < touches.length; index += 1) {
@@ -261,6 +267,12 @@ export default function HomePageClient() {
     }
 
     function handleTouchStart(event: TouchEvent) {
+      if (isInteractiveElement(event.target)) {
+        activeTouchIdRef.current = null;
+        hideVerseSpotlight();
+        return;
+      }
+
       const touch = event.changedTouches[0];
 
       if (!touch) {
