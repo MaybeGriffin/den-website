@@ -1,12 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
+const SKIP_LANDING_SPLASH_STORAGE_KEY = "den:skip-landing-splash";
+
 export default function PrivacyBackButton() {
+  const router = useRouter();
+
   return (
     <button
       aria-label="Go back to the landing page"
       className="privacy-back"
       onClick={() => {
-        window.location.assign("/");
+        window.sessionStorage.setItem(SKIP_LANDING_SPLASH_STORAGE_KEY, "1");
+        router.push("/");
       }}
       type="button"
     >

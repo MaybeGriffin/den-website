@@ -3,11 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { APPLE_STANDARD_EULA_URL } from "@/lib/legal";
 
 const APP_STORE_URL = "https://apps.apple.com/";
 const PRIVACY_POLICY_URL = "/privacy#top";
+const SKIP_LANDING_SPLASH_HISTORY_KEY = "denSkipLandingSplash";
+const SKIP_LANDING_SPLASH_STORAGE_KEY = "den:skip-landing-splash";
 const VERSE_ROW_COUNT = 16;
 const VERSES_PER_ROW = 18;
 const VERSE_GAP_PX = 21;
@@ -50,6 +52,52 @@ function isInteractiveElement(target: EventTarget | null) {
   return target instanceof Element
     ? Boolean(target.closest("a, button, input, textarea, select, summary, [role='button'], [role='link']"))
     : false;
+}
+
+function getHistoryStateRecord() {
+  const historyState = window.history.state;
+
+  return historyState && typeof historyState === "object"
+    ? (historyState as Record<string, unknown>)
+    : null;
+}
+
+function markLandingEntryToSkipSplashOnRestore() {
+  const historyState = getHistoryStateRecord();
+
+  window.history.replaceState(
+    {
+      ...historyState,
+      [SKIP_LANDING_SPLASH_HISTORY_KEY]: true,
+    },
+    "",
+    window.location.href,
+  );
+}
+
+function shouldSkipLandingSplash() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return (
+    window.sessionStorage.getItem(SKIP_LANDING_SPLASH_STORAGE_KEY) === "1" ||
+    getHistoryStateRecord()?.[SKIP_LANDING_SPLASH_HISTORY_KEY] === true
+  );
+}
+
+function clearLandingSplashSkipMarkers() {
+  window.sessionStorage.removeItem(SKIP_LANDING_SPLASH_STORAGE_KEY);
+
+  const historyState = getHistoryStateRecord();
+
+  if (!historyState || historyState[SKIP_LANDING_SPLASH_HISTORY_KEY] !== true) {
+    return;
+  }
+
+  const nextHistoryState = { ...historyState };
+  delete nextHistoryState[SKIP_LANDING_SPLASH_HISTORY_KEY];
+  window.history.replaceState(nextHistoryState, "", window.location.href);
 }
 
 type VerseMarqueeProps = {
@@ -192,6 +240,7 @@ function LegalLink({
       className={className}
       data-label={children}
       href={href}
+      onClick={onClick}
       scroll
     >
       <span>{children}</span>
@@ -202,9 +251,15 @@ function LegalLink({
 export default function HomePageClient() {
   const mainScreenRef = useRef<HTMLDivElement>(null);
   const activeTouchIdRef = useRef<number | null>(null);
+  const [showSplash, setShowSplash] = useState(() => !shouldSkipLandingSplash());
 
   function markExternalNavigation() {
     window.sessionStorage.setItem("den:return-from-external", "1");
+  }
+
+  function handlePrivacyLinkClick() {
+    markLandingEntryToSkipSplashOnRestore();
+    setShowSplash(false);
   }
 
   function hideVerseSpotlight() {
@@ -212,10 +267,12 @@ export default function HomePageClient() {
   }
 
   function getSpotlightRadius() {
-    return Math.min(
+    const radius = Math.min(
       SPOTLIGHT_RADIUS_MAX_PX,
       Math.max(SPOTLIGHT_RADIUS_MIN_PX, window.innerWidth * SPOTLIGHT_RADIUS_VW),
     );
+
+    return window.innerWidth <= 720 ? radius * 2 : radius;
   }
 
   function updateVerseSpotlightFromPoint(clientX: number, clientY: number) {
@@ -240,6 +297,10 @@ export default function HomePageClient() {
 
     updateVerseSpotlightFromPoint(event.clientX, event.clientY);
   }
+
+  useLayoutEffect(() => {
+    clearLandingSplashSkipMarkers();
+  }, []);
 
   useLayoutEffect(() => {
     const mainScreen = mainScreenRef.current;
@@ -394,7 +455,12 @@ export default function HomePageClient() {
               Terms
             </LegalLink>
             <span aria-hidden="true">&amp;</span>
-            <LegalLink href={PRIVACY_POLICY_URL}>Privacy</LegalLink>
+            <LegalLink
+              href={PRIVACY_POLICY_URL}
+              onClick={handlePrivacyLinkClick}
+            >
+              Privacy
+            </LegalLink>
           </div>
           <div className="den-copyright-row">
             <span className="den-copyright-symbol" aria-hidden="true">
@@ -405,17 +471,19 @@ export default function HomePageClient() {
         </footer>
       </div>
 
-      <div className="den-splash" aria-hidden="true">
-        <div className="den-background" />
-        <Image
-          alt=""
-          className="den-splash-cross"
-          height={373}
-          priority
-          src="/CrusaderCross.svg"
-          width={373}
-        />
-      </div>
+      {showSplash ? (
+        <div className="den-splash" aria-hidden="true">
+          <div className="den-background" />
+          <Image
+            alt=""
+            className="den-splash-cross"
+            height={373}
+            priority
+            src="/CrusaderCross.svg"
+            width={373}
+          />
+        </div>
+      ) : null}
     </main>
   );
 }
