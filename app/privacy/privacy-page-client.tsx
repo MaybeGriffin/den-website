@@ -2,6 +2,8 @@
 
 import { useLayoutEffect } from "react";
 
+const PRIVACY_TRANSITION_SEARCH_PARAM = "denTransition";
+
 function scrollToTop() {
   document.querySelector<HTMLElement>(".privacy-shell")?.scrollTo({
     top: 0,
@@ -13,7 +15,28 @@ function scrollToTop() {
   document.body.scrollTop = 0;
 }
 
-export default function PrivacyPageClient() {
+function clearPrivacyTransitionMarker() {
+  const currentUrl = new URL(window.location.href);
+
+  if (!currentUrl.searchParams.has(PRIVACY_TRANSITION_SEARCH_PARAM)) {
+    return;
+  }
+
+  currentUrl.searchParams.delete(PRIVACY_TRANSITION_SEARCH_PARAM);
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
+  );
+}
+
+type PrivacyPageClientProps = {
+  cleanTransitionParam?: boolean;
+};
+
+export default function PrivacyPageClient({
+  cleanTransitionParam = false,
+}: PrivacyPageClientProps) {
   useLayoutEffect(() => {
     const previousScrollRestoration =
       "scrollRestoration" in window.history ? window.history.scrollRestoration : null;
@@ -30,6 +53,10 @@ export default function PrivacyPageClient() {
 
     document.documentElement.style.scrollBehavior = "auto";
 
+    if (cleanTransitionParam) {
+      clearPrivacyTransitionMarker();
+    }
+
     enforceTopScroll();
     window.addEventListener("pageshow", enforceTopScroll);
 
@@ -41,7 +68,7 @@ export default function PrivacyPageClient() {
         window.history.scrollRestoration = previousScrollRestoration;
       }
     };
-  }, []);
+  }, [cleanTransitionParam]);
 
   return null;
 }

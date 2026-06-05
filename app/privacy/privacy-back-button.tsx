@@ -1,21 +1,43 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import type { MouseEvent as ReactMouseEvent } from "react";
 
-const SKIP_LANDING_SPLASH_STORAGE_KEY = "den:skip-landing-splash";
+const LANDING_WITHOUT_SPLASH_URL =
+  "/?denSkipSplash=1&denTransition=privacy-back";
+const PRIVACY_TRANSITION_EXIT_MS = 360;
+
+function isPlainPrimaryClick(event: ReactMouseEvent<HTMLAnchorElement>) {
+  return (
+    event.button === 0 &&
+    !event.defaultPrevented &&
+    !event.metaKey &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.shiftKey
+  );
+}
+
+function startPrivacyBackTransition(event: ReactMouseEvent<HTMLAnchorElement>) {
+  if (!isPlainPrimaryClick(event)) {
+    return;
+  }
+
+  event.preventDefault();
+  const href = event.currentTarget.href;
+  document.documentElement.classList.add("den-privacy-transition-out-back");
+
+  window.setTimeout(() => {
+    window.location.href = href;
+  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : PRIVACY_TRANSITION_EXIT_MS);
+}
 
 export default function PrivacyBackButton() {
-  const router = useRouter();
-
   return (
-    <button
+    <a
       aria-label="Go back to the landing page"
       className="privacy-back"
-      onClick={() => {
-        window.sessionStorage.setItem(SKIP_LANDING_SPLASH_STORAGE_KEY, "1");
-        router.push("/");
-      }}
-      type="button"
+      href={LANDING_WITHOUT_SPLASH_URL}
+      onClick={startPrivacyBackTransition}
     >
       <svg
         aria-hidden="true"
@@ -32,6 +54,6 @@ export default function PrivacyBackButton() {
           strokeWidth="4"
         />
       </svg>
-    </button>
+    </a>
   );
 }

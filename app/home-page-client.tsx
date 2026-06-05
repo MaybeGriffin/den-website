@@ -2,14 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import type {
+  CSSProperties,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+} from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { APPLE_STANDARD_EULA_URL } from "@/lib/legal";
 
 const APP_STORE_URL = "https://apps.apple.com/";
-const PRIVACY_POLICY_URL = "/privacy#top";
+const PRIVACY_POLICY_URL = "/privacy?denTransition=privacy-forward#top";
 const SKIP_LANDING_SPLASH_HISTORY_KEY = "denSkipLandingSplash";
+const SKIP_LANDING_SPLASH_SEARCH_PARAM = "denSkipSplash";
 const SKIP_LANDING_SPLASH_STORAGE_KEY = "den:skip-landing-splash";
+const PRIVACY_TRANSITION_SEARCH_PARAM = "denTransition";
+const PRIVACY_TRANSITION_EXIT_MS = 360;
 const VERSE_ROW_COUNT = 16;
 const VERSES_PER_ROW = 18;
 const VERSE_GAP_PX = 21;
@@ -75,35 +82,74 @@ function markLandingEntryToSkipSplashOnRestore() {
   );
 }
 
-function shouldSkipLandingSplash() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return (
-    window.sessionStorage.getItem(SKIP_LANDING_SPLASH_STORAGE_KEY) === "1" ||
-    getHistoryStateRecord()?.[SKIP_LANDING_SPLASH_HISTORY_KEY] === true
-  );
-}
-
 function clearLandingSplashSkipMarkers() {
   window.sessionStorage.removeItem(SKIP_LANDING_SPLASH_STORAGE_KEY);
 
-  const historyState = getHistoryStateRecord();
+  const currentUrl = new URL(window.location.href);
+  const hadSkipSearchParam = currentUrl.searchParams.has(SKIP_LANDING_SPLASH_SEARCH_PARAM);
 
-  if (!historyState || historyState[SKIP_LANDING_SPLASH_HISTORY_KEY] !== true) {
+  if (hadSkipSearchParam) {
+    currentUrl.searchParams.delete(SKIP_LANDING_SPLASH_SEARCH_PARAM);
+  }
+
+  const hadTransitionSearchParam = currentUrl.searchParams.has(PRIVACY_TRANSITION_SEARCH_PARAM);
+
+  if (hadTransitionSearchParam) {
+    currentUrl.searchParams.delete(PRIVACY_TRANSITION_SEARCH_PARAM);
+  }
+
+  const historyState = getHistoryStateRecord();
+  const hadSkipHistoryMarker = historyState?.[SKIP_LANDING_SPLASH_HISTORY_KEY] === true;
+
+  if (!hadSkipSearchParam && !hadTransitionSearchParam && !hadSkipHistoryMarker) {
     return;
   }
 
-  const nextHistoryState = { ...historyState };
-  delete nextHistoryState[SKIP_LANDING_SPLASH_HISTORY_KEY];
-  window.history.replaceState(nextHistoryState, "", window.location.href);
+  const nextHistoryState = historyState ? { ...historyState } : null;
+
+  if (nextHistoryState) {
+    delete nextHistoryState[SKIP_LANDING_SPLASH_HISTORY_KEY];
+  }
+
+  window.history.replaceState(
+    nextHistoryState,
+    "",
+    `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
+  );
 }
 
 type VerseMarqueeProps = {
   rowIndex: number;
   verses: string[];
 };
+
+function isPlainPrimaryClick(event: ReactMouseEvent<HTMLAnchorElement>) {
+  return (
+    event.button === 0 &&
+    !event.defaultPrevented &&
+    !event.metaKey &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.shiftKey
+  );
+}
+
+function startPrivacyDocumentTransition(
+  event: ReactMouseEvent<HTMLAnchorElement>,
+  direction: "forward" | "back",
+) {
+  if (!isPlainPrimaryClick(event)) {
+    return;
+  }
+
+  event.preventDefault();
+  const href = event.currentTarget.href;
+  document.documentElement.classList.add(`den-privacy-transition-out-${direction}`);
+
+  window.setTimeout(() => {
+    window.location.href = href;
+  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : PRIVACY_TRANSITION_EXIT_MS);
+}
 
 function VerseMarquee({ rowIndex, verses }: VerseMarqueeProps) {
   const rowRef = useRef<HTMLDivElement>(null);
@@ -207,18 +253,20 @@ function VerseMarquee({ rowIndex, verses }: VerseMarqueeProps) {
 
 function LegalLink({
   children,
+  documentNavigation = false,
   href,
   onClick,
   target,
 }: {
   children: string;
+  documentNavigation?: boolean;
   href: string;
-  onClick?: () => void;
+  onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
   target?: "_blank";
 }) {
   const className = "den-legal-link";
 
-  if (target) {
+  if (target || documentNavigation) {
     return (
       <a
         aria-label={children}
@@ -248,18 +296,27 @@ function LegalLink({
   );
 }
 
-export default function HomePageClient() {
+type HomePageClientProps = {
+  animatePrivacyBack?: boolean;
+  skipInitialSplash?: boolean;
+};
+
+export default function HomePageClient({
+  animatePrivacyBack = false,
+  skipInitialSplash = false,
+}: HomePageClientProps) {
   const mainScreenRef = useRef<HTMLDivElement>(null);
   const activeTouchIdRef = useRef<number | null>(null);
-  const [showSplash, setShowSplash] = useState(() => !shouldSkipLandingSplash());
+  const [showSplash, setShowSplash] = useState(() => !skipInitialSplash);
 
   function markExternalNavigation() {
     window.sessionStorage.setItem("den:return-from-external", "1");
   }
 
-  function handlePrivacyLinkClick() {
+  function handlePrivacyLinkClick(event: ReactMouseEvent<HTMLAnchorElement>) {
     markLandingEntryToSkipSplashOnRestore();
     setShowSplash(false);
+    startPrivacyDocumentTransition(event, "forward");
   }
 
   function hideVerseSpotlight() {
@@ -382,7 +439,9 @@ export default function HomePageClient() {
   });
 
   return (
-    <main className="den-landing">
+    <main
+      className={`den-landing${animatePrivacyBack ? " den-landing--privacy-back" : ""}`}
+    >
       <div
         className="den-main-screen"
         onPointerCancel={hideVerseSpotlight}
@@ -456,6 +515,7 @@ export default function HomePageClient() {
             </LegalLink>
             <span aria-hidden="true">&amp;</span>
             <LegalLink
+              documentNavigation
               href={PRIVACY_POLICY_URL}
               onClick={handlePrivacyLinkClick}
             >

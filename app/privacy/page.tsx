@@ -5,6 +5,8 @@ import PrivacyBackButton from "./privacy-back-button";
 import PrivacyPageClient from "./privacy-page-client";
 
 const CONTACT_EMAIL = "griffinbritt@denbible.com";
+const PRIVACY_TRANSITION_SEARCH_PARAM = "denTransition";
+const PRIVACY_FORWARD_TRANSITION = "privacy-forward";
 const THIRD_PARTY_SERVICES = [
   "Supabase (Auth / Database / Storage)",
   "OpenAI (AI Chat / Explore)",
@@ -47,7 +49,23 @@ function renderRichText(text: string) {
   });
 }
 
-export default function PrivacyPage() {
+type PrivacyPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function hasPrivacyForwardTransitionParam(
+  searchParams: Record<string, string | string[] | undefined> | undefined,
+) {
+  const value = searchParams?.[PRIVACY_TRANSITION_SEARCH_PARAM];
+
+  return Array.isArray(value)
+    ? value.includes(PRIVACY_FORWARD_TRANSITION)
+    : value === PRIVACY_FORWARD_TRANSITION;
+}
+
+export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const animateFromLanding = hasPrivacyForwardTransitionParam(resolvedSearchParams);
   const policy = loadPrivacyPolicy();
   const changesSection = policy.sections.find(
     (section) => section.title === "Changes to This Privacy Policy",
@@ -62,8 +80,11 @@ export default function PrivacyPage() {
   );
 
   return (
-    <main className="privacy-shell" id="top">
-      <PrivacyPageClient />
+    <main
+      className={`privacy-shell${animateFromLanding ? " privacy-shell--from-landing" : ""}`}
+      id="top"
+    >
+      <PrivacyPageClient cleanTransitionParam={animateFromLanding} />
       <div aria-hidden="true" className="privacy-blur privacy-blur-top" />
       <div aria-hidden="true" className="privacy-blur privacy-blur-bottom" />
 
