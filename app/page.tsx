@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import HomePageClient from "./home-page-client";
 
 const SKIP_LANDING_SPLASH_SEARCH_PARAM = "denSkipSplash";
-const PRIVACY_TRANSITION_SEARCH_PARAM = "denTransition";
-const PRIVACY_BACK_TRANSITION = "privacy-back";
+const LEGAL_TRANSITION_SEARCH_PARAM = "denTransition";
+const LEGAL_BACK_TRANSITIONS = new Set(["privacy-back", "terms-back", "legal-back"]);
 
 const description =
   "Den is a Bible app for Christians who want daily verses, guided Bible study, saved notes, and honest conversations with friends in one place.";
@@ -50,14 +50,14 @@ function hasSkipLandingSplashParam(
   return Array.isArray(value) ? value.includes("1") : value === "1";
 }
 
-function hasPrivacyBackTransitionParam(
+function hasLegalBackTransitionParam(
   searchParams: Record<string, string | string[] | undefined> | undefined,
 ) {
-  const value = searchParams?.[PRIVACY_TRANSITION_SEARCH_PARAM];
+  const value = searchParams?.[LEGAL_TRANSITION_SEARCH_PARAM];
 
   return Array.isArray(value)
-    ? value.includes(PRIVACY_BACK_TRANSITION)
-    : value === PRIVACY_BACK_TRANSITION;
+    ? value.some((entry) => LEGAL_BACK_TRANSITIONS.has(entry))
+    : typeof value === "string" && LEGAL_BACK_TRANSITIONS.has(value);
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
@@ -65,7 +65,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <HomePageClient
-      animatePrivacyBack={hasPrivacyBackTransitionParam(resolvedSearchParams)}
+      animateLegalBack={hasLegalBackTransitionParam(resolvedSearchParams)}
       skipInitialSplash={hasSkipLandingSplashParam(resolvedSearchParams)}
     />
   );

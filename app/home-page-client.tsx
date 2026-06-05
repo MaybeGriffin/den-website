@@ -8,15 +8,15 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
-import { APPLE_STANDARD_EULA_URL } from "@/lib/legal";
 
 const APP_STORE_URL = "https://apps.apple.com/";
 const PRIVACY_POLICY_URL = "/privacy?denTransition=privacy-forward#top";
+const TERMS_URL = "/terms?denTransition=terms-forward#top";
 const SKIP_LANDING_SPLASH_HISTORY_KEY = "denSkipLandingSplash";
 const SKIP_LANDING_SPLASH_SEARCH_PARAM = "denSkipSplash";
 const SKIP_LANDING_SPLASH_STORAGE_KEY = "den:skip-landing-splash";
-const PRIVACY_TRANSITION_SEARCH_PARAM = "denTransition";
-const PRIVACY_TRANSITION_EXIT_MS = 360;
+const LEGAL_TRANSITION_SEARCH_PARAM = "denTransition";
+const LEGAL_TRANSITION_EXIT_MS = 360;
 const VERSE_ROW_COUNT = 16;
 const VERSES_PER_ROW = 18;
 const VERSE_GAP_PX = 21;
@@ -92,10 +92,10 @@ function clearLandingSplashSkipMarkers() {
     currentUrl.searchParams.delete(SKIP_LANDING_SPLASH_SEARCH_PARAM);
   }
 
-  const hadTransitionSearchParam = currentUrl.searchParams.has(PRIVACY_TRANSITION_SEARCH_PARAM);
+  const hadTransitionSearchParam = currentUrl.searchParams.has(LEGAL_TRANSITION_SEARCH_PARAM);
 
   if (hadTransitionSearchParam) {
-    currentUrl.searchParams.delete(PRIVACY_TRANSITION_SEARCH_PARAM);
+    currentUrl.searchParams.delete(LEGAL_TRANSITION_SEARCH_PARAM);
   }
 
   const historyState = getHistoryStateRecord();
@@ -134,7 +134,7 @@ function isPlainPrimaryClick(event: ReactMouseEvent<HTMLAnchorElement>) {
   );
 }
 
-function startPrivacyDocumentTransition(
+function startLegalDocumentTransition(
   event: ReactMouseEvent<HTMLAnchorElement>,
   direction: "forward" | "back",
 ) {
@@ -148,7 +148,7 @@ function startPrivacyDocumentTransition(
 
   window.setTimeout(() => {
     window.location.href = href;
-  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : PRIVACY_TRANSITION_EXIT_MS);
+  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : LEGAL_TRANSITION_EXIT_MS);
 }
 
 function VerseMarquee({ rowIndex, verses }: VerseMarqueeProps) {
@@ -297,26 +297,22 @@ function LegalLink({
 }
 
 type HomePageClientProps = {
-  animatePrivacyBack?: boolean;
+  animateLegalBack?: boolean;
   skipInitialSplash?: boolean;
 };
 
 export default function HomePageClient({
-  animatePrivacyBack = false,
+  animateLegalBack = false,
   skipInitialSplash = false,
 }: HomePageClientProps) {
   const mainScreenRef = useRef<HTMLDivElement>(null);
   const activeTouchIdRef = useRef<number | null>(null);
   const [showSplash, setShowSplash] = useState(() => !skipInitialSplash);
 
-  function markExternalNavigation() {
-    window.sessionStorage.setItem("den:return-from-external", "1");
-  }
-
-  function handlePrivacyLinkClick(event: ReactMouseEvent<HTMLAnchorElement>) {
+  function handleLegalDocumentLinkClick(event: ReactMouseEvent<HTMLAnchorElement>) {
     markLandingEntryToSkipSplashOnRestore();
     setShowSplash(false);
-    startPrivacyDocumentTransition(event, "forward");
+    startLegalDocumentTransition(event, "forward");
   }
 
   function hideVerseSpotlight() {
@@ -440,7 +436,7 @@ export default function HomePageClient({
 
   return (
     <main
-      className={`den-landing${animatePrivacyBack ? " den-landing--privacy-back" : ""}`}
+      className={`den-landing${animateLegalBack ? " den-landing--privacy-back" : ""}`}
     >
       <div
         className="den-main-screen"
@@ -507,9 +503,9 @@ export default function HomePageClient({
         <footer className="den-legal-nav" aria-label="Legal">
           <div className="den-legal-row">
             <LegalLink
-              href={APPLE_STANDARD_EULA_URL}
-              onClick={markExternalNavigation}
-              target="_blank"
+              documentNavigation
+              href={TERMS_URL}
+              onClick={handleLegalDocumentLinkClick}
             >
               Terms
             </LegalLink>
@@ -517,7 +513,7 @@ export default function HomePageClient({
             <LegalLink
               documentNavigation
               href={PRIVACY_POLICY_URL}
-              onClick={handlePrivacyLinkClick}
+              onClick={handleLegalDocumentLinkClick}
             >
               Privacy
             </LegalLink>

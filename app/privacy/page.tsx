@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Fragment } from "react";
+import LegalBackButton from "@/app/_components/legal-back-button";
+import LegalPageClient from "@/app/_components/legal-page-client";
 import { loadPrivacyPolicy } from "@/lib/privacy-policy";
-import PrivacyBackButton from "./privacy-back-button";
-import PrivacyPageClient from "./privacy-page-client";
 
 const CONTACT_EMAIL = "griffinbritt@denbible.com";
 const PRIVACY_TRANSITION_SEARCH_PARAM = "denTransition";
@@ -84,14 +84,14 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
       className={`privacy-shell${animateFromLanding ? " privacy-shell--from-landing" : ""}`}
       id="top"
     >
-      <PrivacyPageClient cleanTransitionParam={animateFromLanding} />
+      <LegalPageClient cleanTransitionParam={animateFromLanding} />
       <div aria-hidden="true" className="privacy-blur privacy-blur-top" />
       <div aria-hidden="true" className="privacy-blur privacy-blur-bottom" />
 
       <div className="privacy-fixed-bar">
         <div className="privacy-fixed-inner">
           <div className="privacy-title-row">
-            <PrivacyBackButton />
+            <LegalBackButton />
 
             <div className="privacy-title-copy">
               <h1>{policy.title}</h1>

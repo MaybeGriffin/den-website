@@ -2,9 +2,8 @@
 
 import type { MouseEvent as ReactMouseEvent } from "react";
 
-const LANDING_WITHOUT_SPLASH_URL =
-  "/?denSkipSplash=1&denTransition=privacy-back";
-const PRIVACY_TRANSITION_EXIT_MS = 360;
+const LANDING_WITHOUT_SPLASH_URL = "/?denSkipSplash=1&denTransition=legal-back";
+const LEGAL_TRANSITION_EXIT_MS = 360;
 
 function isPlainPrimaryClick(event: ReactMouseEvent<HTMLAnchorElement>) {
   return (
@@ -17,7 +16,7 @@ function isPlainPrimaryClick(event: ReactMouseEvent<HTMLAnchorElement>) {
   );
 }
 
-function startPrivacyBackTransition(event: ReactMouseEvent<HTMLAnchorElement>) {
+function startLegalBackTransition(event: ReactMouseEvent<HTMLAnchorElement>) {
   if (!isPlainPrimaryClick(event)) {
     return;
   }
@@ -28,16 +27,16 @@ function startPrivacyBackTransition(event: ReactMouseEvent<HTMLAnchorElement>) {
 
   window.setTimeout(() => {
     window.location.href = href;
-  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : PRIVACY_TRANSITION_EXIT_MS);
+  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : LEGAL_TRANSITION_EXIT_MS);
 }
 
-export default function PrivacyBackButton() {
+export default function LegalBackButton() {
   return (
     <a
       aria-label="Go back to the landing page"
       className="privacy-back"
       href={LANDING_WITHOUT_SPLASH_URL}
-      onClick={startPrivacyBackTransition}
+      onClick={startLegalBackTransition}
     >
       <svg
         aria-hidden="true"

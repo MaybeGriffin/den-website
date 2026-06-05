@@ -932,6 +932,10 @@ button {
   padding: 10.2rem 1rem 4rem;
 }
 
+.privacy-shell--terms .privacy-inner {
+  padding-top: 11.7rem;
+}
+
 .privacy-title-row {
   display: flex;
   align-items: flex-start;
@@ -950,6 +954,15 @@ button {
   line-height: 0.95;
   letter-spacing: -0.04em;
   font-weight: 900;
+}
+
+.privacy-shell--terms .privacy-title-copy h1 {
+  font-size: clamp(2.15rem, 5.2vw, 4rem);
+}
+
+.terms-title-keep {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 @supports (height: 100dvh) {
@@ -1232,6 +1245,14 @@ button {
 
   .privacy-inner {
     padding: 8.3rem 1rem 2.5rem;
+  }
+
+  .privacy-shell--terms .privacy-inner {
+    padding-top: 12.6rem;
+  }
+
+  .privacy-shell--terms .privacy-title-copy h1 {
+    font-size: clamp(2rem, 9vw, 2.5rem);
   }
 
   .privacy-card {

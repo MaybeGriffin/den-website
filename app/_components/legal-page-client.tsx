@@ -2,7 +2,7 @@
 
 import { useLayoutEffect } from "react";
 
-const PRIVACY_TRANSITION_SEARCH_PARAM = "denTransition";
+const LEGAL_TRANSITION_SEARCH_PARAM = "denTransition";
 
 function scrollToTop() {
   document.querySelector<HTMLElement>(".privacy-shell")?.scrollTo({
@@ -15,14 +15,14 @@ function scrollToTop() {
   document.body.scrollTop = 0;
 }
 
-function clearPrivacyTransitionMarker() {
+function clearLegalTransitionMarker() {
   const currentUrl = new URL(window.location.href);
 
-  if (!currentUrl.searchParams.has(PRIVACY_TRANSITION_SEARCH_PARAM)) {
+  if (!currentUrl.searchParams.has(LEGAL_TRANSITION_SEARCH_PARAM)) {
     return;
   }
 
-  currentUrl.searchParams.delete(PRIVACY_TRANSITION_SEARCH_PARAM);
+  currentUrl.searchParams.delete(LEGAL_TRANSITION_SEARCH_PARAM);
   window.history.replaceState(
     window.history.state,
     "",
@@ -30,13 +30,13 @@ function clearPrivacyTransitionMarker() {
   );
 }
 
-type PrivacyPageClientProps = {
+type LegalPageClientProps = {
   cleanTransitionParam?: boolean;
 };
 
-export default function PrivacyPageClient({
+export default function LegalPageClient({
   cleanTransitionParam = false,
-}: PrivacyPageClientProps) {
+}: LegalPageClientProps) {
   useLayoutEffect(() => {
     const previousScrollRestoration =
       "scrollRestoration" in window.history ? window.history.scrollRestoration : null;
@@ -54,7 +54,7 @@ export default function PrivacyPageClient({
     document.documentElement.style.scrollBehavior = "auto";
 
     if (cleanTransitionParam) {
-      clearPrivacyTransitionMarker();
+      clearLegalTransitionMarker();
     }
 
     enforceTopScroll();
