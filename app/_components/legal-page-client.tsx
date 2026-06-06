@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect } from "react";
+import { clearLegalTransitionOutClasses } from "@/app/_components/legal-transition";
 
 const LEGAL_TRANSITION_SEARCH_PARAM = "denTransition";
 
@@ -38,6 +39,8 @@ export default function LegalPageClient({
   cleanTransitionParam = false,
 }: LegalPageClientProps) {
   useLayoutEffect(() => {
+    clearLegalTransitionOutClasses();
+
     const previousScrollRestoration =
       "scrollRestoration" in window.history ? window.history.scrollRestoration : null;
     const previousScrollBehavior = document.documentElement.style.scrollBehavior;
@@ -53,14 +56,21 @@ export default function LegalPageClient({
 
     document.documentElement.style.scrollBehavior = "auto";
 
+    let enterTimer = 0;
+    const shell = document.querySelector<HTMLElement>(".privacy-shell");
+
     if (cleanTransitionParam) {
       clearLegalTransitionMarker();
+      enterTimer = window.setTimeout(() => {
+        shell?.classList.add("privacy-shell--entered");
+      }, 32);
     }
 
     enforceTopScroll();
     window.addEventListener("pageshow", enforceTopScroll);
 
     return () => {
+      window.clearTimeout(enterTimer);
       window.removeEventListener("pageshow", enforceTopScroll);
       document.documentElement.style.scrollBehavior = previousScrollBehavior;
 

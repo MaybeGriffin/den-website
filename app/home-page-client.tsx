@@ -1,13 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type {
   CSSProperties,
-  MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  clearLegalTransitionOutClasses,
+  startLegalPageTransitionFromAnchor,
+} from "@/app/_components/legal-transition";
 
 const APP_STORE_URL = "https://apps.apple.com/";
 const PRIVACY_POLICY_URL = "/privacy?denTransition=privacy-forward#top";
@@ -16,7 +19,6 @@ const SKIP_LANDING_SPLASH_HISTORY_KEY = "denSkipLandingSplash";
 const SKIP_LANDING_SPLASH_SEARCH_PARAM = "denSkipSplash";
 const SKIP_LANDING_SPLASH_STORAGE_KEY = "den:skip-landing-splash";
 const LEGAL_TRANSITION_SEARCH_PARAM = "denTransition";
-const LEGAL_TRANSITION_EXIT_MS = 360;
 const VERSE_ROW_COUNT = 16;
 const VERSES_PER_ROW = 18;
 const VERSE_GAP_PX = 21;
@@ -123,34 +125,6 @@ type VerseMarqueeProps = {
   verses: string[];
 };
 
-function isPlainPrimaryClick(event: ReactMouseEvent<HTMLAnchorElement>) {
-  return (
-    event.button === 0 &&
-    !event.defaultPrevented &&
-    !event.metaKey &&
-    !event.altKey &&
-    !event.ctrlKey &&
-    !event.shiftKey
-  );
-}
-
-function startLegalDocumentTransition(
-  event: ReactMouseEvent<HTMLAnchorElement>,
-  direction: "forward" | "back",
-) {
-  if (!isPlainPrimaryClick(event)) {
-    return;
-  }
-
-  event.preventDefault();
-  const href = event.currentTarget.href;
-  document.documentElement.classList.add(`den-privacy-transition-out-${direction}`);
-
-  window.setTimeout(() => {
-    window.location.href = href;
-  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : LEGAL_TRANSITION_EXIT_MS);
-}
-
 function VerseMarquee({ rowIndex, verses }: VerseMarqueeProps) {
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -253,46 +227,58 @@ function VerseMarquee({ rowIndex, verses }: VerseMarqueeProps) {
 
 function LegalLink({
   children,
-  documentNavigation = false,
   href,
-  onClick,
+  onTransitionStart,
   target,
 }: {
   children: string;
-  documentNavigation?: boolean;
   href: string;
-  onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
+  onTransitionStart?: () => void;
   target?: "_blank";
 }) {
   const className = "den-legal-link";
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const router = useRouter();
 
-  if (target || documentNavigation) {
-    return (
-      <a
-        aria-label={children}
-        className={className}
-        data-label={children}
-        href={href}
-        onClick={onClick}
-        rel="noopener noreferrer"
-        target={target}
-      >
-        <span>{children}</span>
-      </a>
-    );
-  }
+  useLayoutEffect(() => {
+    const link = linkRef.current;
+
+    if (target || link === null) {
+      return undefined;
+    }
+
+    const anchor = link;
+
+    function handleLegalLinkClick(event: MouseEvent) {
+      startLegalPageTransitionFromAnchor(
+        event,
+        anchor,
+        "forward",
+        (nextHref) => router.push(nextHref, { scroll: false }),
+        onTransitionStart,
+      );
+    }
+
+    anchor.addEventListener("click", handleLegalLinkClick, { capture: true });
+
+    return () => {
+      anchor.removeEventListener("click", handleLegalLinkClick, { capture: true });
+    };
+  }, [onTransitionStart, router, target]);
 
   return (
-    <Link
+    <a
       aria-label={children}
       className={className}
+      data-den-legal-transition={target ? undefined : "forward"}
       data-label={children}
       href={href}
-      onClick={onClick}
-      scroll
+      ref={linkRef}
+      rel={target ? "noopener noreferrer" : undefined}
+      target={target}
     >
       <span>{children}</span>
-    </Link>
+    </a>
   );
 }
 
@@ -307,13 +293,13 @@ export default function HomePageClient({
 }: HomePageClientProps) {
   const mainScreenRef = useRef<HTMLDivElement>(null);
   const activeTouchIdRef = useRef<number | null>(null);
+  const router = useRouter();
   const [showSplash, setShowSplash] = useState(() => !skipInitialSplash);
-
-  function handleLegalDocumentLinkClick(event: ReactMouseEvent<HTMLAnchorElement>) {
+  const [legalBackEntered, setLegalBackEntered] = useState(() => !animateLegalBack);
+  const handleLegalTransitionStart = useCallback(() => {
     markLandingEntryToSkipSplashOnRestore();
     setShowSplash(false);
-    startLegalDocumentTransition(event, "forward");
-  }
+  }, []);
 
   function hideVerseSpotlight() {
     mainScreenRef.current?.style.setProperty("--den-verse-spotlight-active", "0");
@@ -352,8 +338,28 @@ export default function HomePageClient({
   }
 
   useLayoutEffect(() => {
+    clearLegalTransitionOutClasses();
     clearLandingSplashSkipMarkers();
   }, []);
+
+  useEffect(() => {
+    router.prefetch(TERMS_URL);
+    router.prefetch(PRIVACY_POLICY_URL);
+  }, [router]);
+
+  useLayoutEffect(() => {
+    if (!animateLegalBack) {
+      return undefined;
+    }
+
+    const enterTimer = window.setTimeout(() => {
+      setLegalBackEntered(true);
+    }, 32);
+
+    return () => {
+      window.clearTimeout(enterTimer);
+    };
+  }, [animateLegalBack]);
 
   useLayoutEffect(() => {
     const mainScreen = mainScreenRef.current;
@@ -436,7 +442,9 @@ export default function HomePageClient({
 
   return (
     <main
-      className={`den-landing${animateLegalBack ? " den-landing--privacy-back" : ""}`}
+      className={`den-landing${animateLegalBack ? " den-landing--privacy-back" : ""}${
+        animateLegalBack && legalBackEntered ? " den-landing--entered" : ""
+      }`}
     >
       <div
         className="den-main-screen"
@@ -502,19 +510,11 @@ export default function HomePageClient({
 
         <footer className="den-legal-nav" aria-label="Legal">
           <div className="den-legal-row">
-            <LegalLink
-              documentNavigation
-              href={TERMS_URL}
-              onClick={handleLegalDocumentLinkClick}
-            >
+            <LegalLink href={TERMS_URL} onTransitionStart={handleLegalTransitionStart}>
               Terms
             </LegalLink>
             <span aria-hidden="true">&amp;</span>
-            <LegalLink
-              documentNavigation
-              href={PRIVACY_POLICY_URL}
-              onClick={handleLegalDocumentLinkClick}
-            >
+            <LegalLink href={PRIVACY_POLICY_URL} onTransitionStart={handleLegalTransitionStart}>
               Privacy
             </LegalLink>
           </div>

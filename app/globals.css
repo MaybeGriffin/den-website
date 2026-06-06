@@ -8,6 +8,10 @@
   --accent-dark: #0873a9;
   --card-border: rgba(255, 255, 255, 0.35);
   --card-shadow: 0 32px 90px rgba(0, 0, 0, 0.4);
+  --den-legal-transition-distance: clamp(28px, 6vw, 56px);
+  --den-legal-transition-enter-duration: 480ms;
+  --den-legal-transition-exit-duration: 360ms;
+  --den-legal-transition-ease: cubic-bezier(0.42, 0, 0.58, 1);
   --mesh-offwhite: 244, 239, 230;
   --radius-xl: 34px;
   --radius-lg: 26px;
@@ -19,31 +23,9 @@
 }
 
 html {
-  scroll-behavior: smooth;
-}
-
-@view-transition {
-  navigation: auto;
-}
-
-::view-transition {
   background: #080808;
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 560ms;
-  animation-fill-mode: both;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  mix-blend-mode: normal;
-}
-
-::view-transition-old(root) {
-  animation-name: denPrivacyPageOld;
-}
-
-::view-transition-new(root) {
-  animation-name: denPrivacyPageNew;
+  color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 html.den-privacy-transition-out-forward,
@@ -56,40 +38,77 @@ html.den-privacy-transition-out-back body {
   overflow: hidden;
 }
 
-html.den-privacy-transition-out-forward body > main,
-html.den-privacy-transition-out-back body > main,
-.privacy-shell--from-landing,
+html.den-privacy-transition-out-forward .den-main-screen,
+html.den-privacy-transition-out-back .privacy-fixed-bar,
+html.den-privacy-transition-out-back .privacy-inner,
+.privacy-shell--from-landing .privacy-fixed-bar,
+.privacy-shell--from-landing .privacy-inner,
 .den-landing--privacy-back .den-main-screen {
-  animation-duration: 520ms;
-  animation-fill-mode: both;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform, filter;
+  backface-visibility: hidden;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-duration: var(--den-legal-transition-enter-duration);
+  transition-property: opacity, transform;
+  transition-timing-function: var(--den-legal-transition-ease);
+  will-change: opacity, transform;
 }
 
-html.den-privacy-transition-out-forward body > main {
-  animation-duration: 360ms;
-  animation-name: denPrivacyExitLeft;
+html.den-privacy-transition-out-forward .den-main-screen {
+  opacity: 0;
   pointer-events: none;
+  transform: translate3d(calc(var(--den-legal-transition-distance) * -1), 0, 0) scale(0.99);
+  transition-duration: var(--den-legal-transition-exit-duration);
 }
 
-html.den-privacy-transition-out-back body > main {
-  animation-duration: 360ms;
-  animation-name: denPrivacyExitRight;
+html.den-privacy-transition-out-back .privacy-fixed-bar,
+html.den-privacy-transition-out-back .privacy-inner {
+  opacity: 0;
   pointer-events: none;
+  transform: translate3d(var(--den-legal-transition-distance), 0, 0) scale(0.99);
+  transition-duration: var(--den-legal-transition-exit-duration);
 }
 
-.privacy-shell--from-landing {
-  animation-name: denPrivacyEnterFromRight;
+.privacy-shell--from-landing .privacy-fixed-bar,
+.privacy-shell--from-landing .privacy-inner {
+  opacity: 0;
+  transform: translate3d(var(--den-legal-transition-distance), 0, 0) scale(1.01);
+}
+
+.privacy-shell--from-landing.privacy-shell--entered .privacy-fixed-bar,
+.privacy-shell--from-landing.privacy-shell--entered .privacy-inner {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 .den-landing--privacy-back .den-main-screen {
-  animation-name: denPrivacyEnterFromLeft;
+  opacity: 0;
+  transform: translate3d(calc(var(--den-legal-transition-distance) * -1), 0, 0) scale(1.01);
+}
+
+.den-landing--privacy-back.den-landing--entered .den-main-screen {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+html.den-privacy-transition-out-forward .den-landing--privacy-back.den-landing--entered .den-main-screen {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(calc(var(--den-legal-transition-distance) * -1), 0, 0) scale(0.99);
+  transition-duration: var(--den-legal-transition-exit-duration);
+}
+
+html.den-privacy-transition-out-back .privacy-shell--from-landing.privacy-shell--entered .privacy-fixed-bar,
+html.den-privacy-transition-out-back .privacy-shell--from-landing.privacy-shell--entered .privacy-inner {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(var(--den-legal-transition-distance), 0, 0) scale(0.99);
+  transition-duration: var(--den-legal-transition-exit-duration);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background: #080808;
   color: var(--text-light);
   font-family: "TikTok Sans", sans-serif;
   overflow-x: hidden;
@@ -658,106 +677,6 @@ button {
   animation: revealUp 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes denPrivacyPageOld {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-
-  to {
-    opacity: 0.2;
-    transform: translate3d(-5vw, 0, 0) scale(0.985);
-    filter: blur(6px);
-  }
-}
-
-@keyframes denPrivacyPageNew {
-  from {
-    opacity: 0;
-    transform: translate3d(5vw, 0, 0) scale(1.015);
-    filter: blur(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes denPrivacyExitLeft {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translate3d(-18vw, 0, 0) scale(0.97);
-    filter: blur(10px);
-  }
-}
-
-@keyframes denPrivacyExitRight {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translate3d(18vw, 0, 0) scale(0.97);
-    filter: blur(10px);
-  }
-}
-
-@keyframes denPrivacyEnterFromRight {
-  from {
-    opacity: 0;
-    transform: translate3d(18vw, 0, 0) scale(1.03);
-    filter: blur(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes denPrivacyEnterFromLeft {
-  from {
-    opacity: 0;
-    transform: translate3d(-18vw, 0, 0) scale(1.03);
-    filter: blur(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes denPrivacyReducedOld {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes denPrivacyReducedNew {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes denSplashFade {
   0% {
     opacity: 1;
@@ -847,26 +766,21 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root) {
-    animation-duration: 1ms;
-    animation-name: denPrivacyReducedOld;
+  :root {
+    --den-legal-transition-enter-duration: 1ms;
+    --den-legal-transition-exit-duration: 1ms;
   }
 
-  ::view-transition-new(root) {
-    animation-duration: 1ms;
-    animation-name: denPrivacyReducedNew;
+  html.den-privacy-transition-out-forward .den-main-screen,
+  html.den-privacy-transition-out-back .privacy-fixed-bar,
+  html.den-privacy-transition-out-back .privacy-inner {
+    transition-duration: 1ms;
   }
 
-  html.den-privacy-transition-out-forward body > main,
-  html.den-privacy-transition-out-back body > main {
-    animation-duration: 1ms;
-    animation-name: denPrivacyReducedOld;
-  }
-
-  .privacy-shell--from-landing,
+  .privacy-shell--from-landing .privacy-fixed-bar,
+  .privacy-shell--from-landing .privacy-inner,
   .den-landing--privacy-back .den-main-screen {
-    animation-duration: 1ms;
-    animation-name: denPrivacyReducedNew;
+    transition-duration: 1ms;
   }
 
   .den-main-screen,

@@ -1,42 +1,47 @@
 "use client";
 
-import type { MouseEvent as ReactMouseEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { startLegalPageTransitionFromAnchor } from "@/app/_components/legal-transition";
 
 const LANDING_WITHOUT_SPLASH_URL = "/?denSkipSplash=1&denTransition=legal-back";
-const LEGAL_TRANSITION_EXIT_MS = 360;
-
-function isPlainPrimaryClick(event: ReactMouseEvent<HTMLAnchorElement>) {
-  return (
-    event.button === 0 &&
-    !event.defaultPrevented &&
-    !event.metaKey &&
-    !event.altKey &&
-    !event.ctrlKey &&
-    !event.shiftKey
-  );
-}
-
-function startLegalBackTransition(event: ReactMouseEvent<HTMLAnchorElement>) {
-  if (!isPlainPrimaryClick(event)) {
-    return;
-  }
-
-  event.preventDefault();
-  const href = event.currentTarget.href;
-  document.documentElement.classList.add("den-privacy-transition-out-back");
-
-  window.setTimeout(() => {
-    window.location.href = href;
-  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : LEGAL_TRANSITION_EXIT_MS);
-}
 
 export default function LegalBackButton() {
+  const backLinkRef = useRef<HTMLAnchorElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch(LANDING_WITHOUT_SPLASH_URL);
+  }, [router]);
+
+  useLayoutEffect(() => {
+    const backLink = backLinkRef.current;
+
+    if (backLink === null) {
+      return undefined;
+    }
+
+    const anchor = backLink;
+
+    function handleLegalBackClick(event: MouseEvent) {
+      startLegalPageTransitionFromAnchor(event, anchor, "back", (href) =>
+        router.push(href, { scroll: false }),
+      );
+    }
+
+    anchor.addEventListener("click", handleLegalBackClick, { capture: true });
+
+    return () => {
+      anchor.removeEventListener("click", handleLegalBackClick, { capture: true });
+    };
+  }, [router]);
+
   return (
     <a
       aria-label="Go back to the landing page"
       className="privacy-back"
       href={LANDING_WITHOUT_SPLASH_URL}
-      onClick={startLegalBackTransition}
+      ref={backLinkRef}
     >
       <svg
         aria-hidden="true"
